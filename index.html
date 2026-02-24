@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>لوحة المالك #555497</title>
+    <style>
+        body { background: #000; color: #0f0; text-align: center; padding-top: 100px; font-family: monospace; }
+        .box { border: 2px solid #0f0; padding: 25px; border-radius: 15px; display: inline-block; background: #050505; }
+        input { display: block; width: 280px; margin: 15px auto; padding: 12px; background: #111; border: 1px solid #0f0; color: #fff; }
+        button { width: 300px; padding: 12px; cursor: pointer; font-weight: bold; background: #0f0; color: #000; border: none; }
+        .up-btn { background: #8b5cf6; color: #fff; margin-top: 15px; }
+    </style>
+</head>
+<body>
+    <div class="box">
+        <h3>نظام التحكم المباشر (#555497)</h3>
+        <input type="text" id="w" placeholder="أدخل محفظة UQ">
+        <button onclick="localStorage.setItem('isActivated','true'); location.href='dashboard.html'">إضافة وتفعيل (دخول)</button>
+        <input type="number" id="i" placeholder="رقم الـ ID للترقية">
+        <button class="up-btn" onclick="alert('تمت ترقية الـ ID بنجاح')">ترقية الـ ID فوراً</button>
+    </div>
+</body>
+</html>
