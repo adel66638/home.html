@@ -2,22 +2,98 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>لوحة المالك #555497</title>
+    <title>نظام إدارة المحافظ والترقيات - المرحلة الدائمة</title>
     <style>
-        body { background: #000; color: #0f0; text-align: center; padding-top: 100px; font-family: monospace; }
-        .box { border: 2px solid #0f0; padding: 25px; border-radius: 15px; display: inline-block; background: #050505; }
-        input { display: block; width: 280px; margin: 15px auto; padding: 12px; background: #111; border: 1px solid #0f0; color: #fff; }
-        button { width: 300px; padding: 12px; cursor: pointer; font-weight: bold; background: #0f0; color: #000; border: none; }
-        .up-btn { background: #8b5cf6; color: #fff; margin-top: 15px; }
+        body { font-family: sans-serif; background: #1a1a1a; color: #fff; padding: 20px; }
+        .container { max-width: 800px; margin: 0 auto; background: #2d2d2d; padding: 20px; border-radius: 10px; border: 1px solid #444; }
+        input, button { width: 100%; padding: 10px; margin: 10px 0; border-radius: 5px; border: none; }
+        button { background: #27ae60; color: white; font-weight: bold; cursor: pointer; }
+        table { width: 100%; margin-top: 20px; border-collapse: collapse; }
+        th, td { border: 1px solid #444; padding: 10px; text-align: center; }
+        th { background: #333; }
+        .status-active { color: #2ecc71; font-weight: bold; }
     </style>
 </head>
 <body>
-    <div class="box">
-        <h3>نظام التحكم المباشر (#555497)</h3>
-        <input type="text" id="w" placeholder="أدخل محفظة UQ">
-        <button onclick="localStorage.setItem('isActivated','true'); location.href='dashboard.html'">إضافة وتفعيل (دخول)</button>
-        <input type="number" id="i" placeholder="رقم الـ ID للترقية">
-        <button class="up-btn" onclick="alert('تمت ترقية الـ ID بنجاح')">ترقية الـ ID فوراً</button>
-    </div>
+
+<div class="container">
+    <h2>🛠️ لوحة تحكم المالك (Owner Mode)</h2>
+    <p>الحالة: <span id="authStatus" style="color: red;">مغلق - أدخل كود الصلاحيات</span></p>
+    
+    <input type="password" id="secretKey" placeholder="أدخل كود الصلاحيات (تونيك ...)">
+    <button onclick="unlockSystem()">تفعيل النظام</button>
+
+    <hr>
+
+    <h3>➕ إضافة مشترك وترقيته (1-20)</h3>
+    <input type="text" id="subID" placeholder="رقم ID المشترك">
+    <input type="text" id="wallet1" placeholder="المحفظة الأولى">
+    <input type="text" id="wallet2" placeholder="المحفظة الثانية">
+    <button onclick="processSubscriber()">إضافة وتفعيل وترقية فورا</button>
+
+    <h3>📊 سجل الشبكة (Upline: ME)</h3>
+    <table id="subTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>المحافظ (UQ)</th>
+                <th>الـ Upline</th>
+                <th>المستوى</th>
+                <th>الحالة</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+
+<script>
+    let isAuthorized = false;
+    const myUplineID = "ME (YOU)"; // أنت الـ Upline دائماً
+
+    // 1. تفعيل صلاحيات المالك
+    function unlockSystem() {
+        const key = document.getElementById('secretKey').value;
+        if (key === "تونيك abel4") {
+            isAuthorized = true;
+            document.getElementById('authStatus').innerText = "🔓 تم فتح صلاحيات المالك - النظام جاهز";
+            document.getElementById('authStatus').style.color = "#2ecc71";
+        } else {
+            alert("الكود غير صحيح!");
+        }
+    }
+
+    // 2. معالجة البيانات (تنسيق UQ + ترقية + ربط)
+    function processSubscriber() {
+        if (!isAuthorized) return alert("يرجى تفعيل الصلاحيات أولاً!");
+
+        const id = document.getElementById('subID').value;
+        let w1 = document.getElementById('wallet1').value;
+        let w2 = document.getElementById('wallet2').value;
+
+        if (!id || !w1 || !w2) return alert("يرجى ملء كافة البيانات");
+
+        // فرض تنسيق UQ كما طلبت
+        const toUQ = (w) => w.toUpperCase().startsWith("UQ") ? w : "UQ" + w;
+        const finalW1 = toUQ(w1);
+        const finalW2 = toUQ(w2);
+
+        // إضافة للجدول (تمثل قاعدة البيانات) مع ترقية للمستوى 20 مباشرة
+        const table = document.getElementById('subTable').getElementsByTagName('tbody')[0];
+        const row = table.insertRow();
+        row.innerHTML = `
+            <td>${id}</td>
+            <td style="font-size: 12px;">${finalW1}<br>${finalW2}</td>
+            <td>${myUplineID}</td>
+            <td style="color: gold; font-weight: bold;">Level 20</td>
+            <td class="status-active">نشط (بدون دفع)</td>
+        `;
+
+        // تصفير الخانات للعملية التالية
+        document.getElementById('subID').value = '';
+        document.getElementById('wallet1').value = '';
+        document.getElementById('wallet2').value = '';
+    }
+</script>
+
 </body>
 </html>
