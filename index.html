@@ -1405,8 +1405,6 @@ function doLogin() {
 }
 
 function doAdminLogin() {
-  const pass = document.getElementById('admin-pass').value;
-  if (pass !== ADMIN_PASS) return showToast('❌ Incorrect password');
   showScreen('admin');
   renderAdminPanel();
 }
