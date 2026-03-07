@@ -720,6 +720,9 @@
   .blocked-title { font-size: 22px; font-weight: 900; color: var(--red); margin-bottom: 12px; font-family: Orbitron, monospace; }
   .blocked-msg { font-size: 14px; color: var(--muted); line-height: 1.6; }
 </style>
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -1189,6 +1192,39 @@
 <div class="toast" id="toast"></div>
 
 <script>
+// ===== FIREBASE CONFIG =====
+const firebaseConfig = {
+  apiKey: "AIzaSyAsNRuN09FLendzP60yBaiw7hV3Toex0D0",
+  authDomain: "tonminer-87923.firebaseapp.com",
+  databaseURL: "https://tonminer-87923-default-rtdb.firebaseio.com",
+  projectId: "tonminer-87923",
+  storageBucket: "tonminer-87923.firebasestorage.app",
+  messagingSenderId: "736875130208",
+  appId: "1:736875130208:web:5741503e947609f09bc205"
+};
+firebase.initializeApp(firebaseConfig);
+const firebaseDb = firebase.database();
+
+function saveDb() {
+  firebaseDb.ref('tonneed').set(db);
+  localStorage.setItem('tonneed_db', JSON.stringify(db));
+}
+
+function loadDb(callback) {
+  firebaseDb.ref('tonneed').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if (data) {
+      db = data;
+      // Ensure commissions exist
+      if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
+    }
+    callback();
+  }).catch(() => {
+    // fallback to localStorage
+    callback();
+  });
+}
+
 // ===== DATA STORE =====
 // Default commission rates per level (editable from admin panel)
 const DEFAULT_COMMISSIONS = {
@@ -1243,7 +1279,7 @@ function getCommission(level) {
   return db.commissions[level] ?? 0;
 }
 
-function saveDb() { localStorage.setItem('tonneed_db', JSON.stringify(db)); }
+// saveDb defined above
 
 let currentUser = null;
 let timerInterval = null;
@@ -2153,19 +2189,21 @@ function showToast(msg) {
 
 // Check ref in URL
 window.addEventListener('load', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const ref = urlParams.get('ref');
-  const admin = urlParams.get('admin');
-  if (admin === 'true') {
-    showScreen('admin');
-    renderAdminPanel();
-    return;
-  }
-  if (ref) {
-    showRegister();
-    document.getElementById('reg-ref').value = ref;
-    showToast('🔗 Redirected via referral link');
-  }
+  loadDb(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const ref = urlParams.get('ref');
+    const admin = urlParams.get('admin');
+    if (admin === 'true') {
+      showScreen('admin');
+      renderAdminPanel();
+      return;
+    }
+    if (ref) {
+      showRegister();
+      document.getElementById('reg-ref').value = ref;
+      showToast('🔗 Redirected via referral link');
+    }
+  });
 });
 </script>
 </body>
