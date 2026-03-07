@@ -784,10 +784,6 @@
     <div id="admin-login-form" style="width:100%; display:none">
       <div class="card" style="padding:24px; border-color: var(--gold)">
         <h2 style="text-align:center; margin-bottom:20px; font-size:18px; color:var(--gold)">🔐 Admin Panel</h2>
-        <div class="input-group">
-          <label class="input-label">Admin Password</label>
-          <input type="password" class="input-field" id="admin-pass" placeholder="Password Admin">
-        </div>
         <button class="btn btn-gold" style="margin-top:8px" onclick="doAdminLogin()">Enter Admin Panel</button>
       </div>
       <div class="auth-switch"><a onclick="showLogin()">← Back</a></div>
@@ -2159,6 +2155,12 @@ function showToast(msg) {
 window.addEventListener('load', () => {
   const urlParams = new URLSearchParams(window.location.search);
   const ref = urlParams.get('ref');
+  const admin = urlParams.get('admin');
+  if (admin === 'true') {
+    showScreen('admin');
+    renderAdminPanel();
+    return;
+  }
   if (ref) {
     showRegister();
     document.getElementById('reg-ref').value = ref;
