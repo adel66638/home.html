@@ -2,7 +2,8 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="format-detection" content="telephone=no">
 <title>TonNeed - Mining Platform</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Orbitron:wght@400;700;900&display=swap');
@@ -191,6 +192,10 @@
     position: relative;
     transition: transform 0.2s;
     animation: orbPulse 3s ease-in-out infinite;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+    -webkit-user-select: none;
   }
 
   .mining-orb:active { transform: scale(0.95); }
@@ -720,6 +725,8 @@
   .blocked-title { font-size: 22px; font-weight: 900; color: var(--red); margin-bottom: 12px; font-family: Orbitron, monospace; }
   .blocked-msg { font-size: 14px; color: var(--muted); line-height: 1.6; }
 </style>
+<!-- Telegram WebApp -->
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
@@ -752,7 +759,7 @@
       <div class="auth-switch">
         Don't have an account? <a onclick="showRegister()">Register Now</a>
         <br><br>
-        
+        <a onclick="showAdminLogin()" style="color:var(--muted); font-size:11px">Admin Login 🔐</a>
       </div>
     </div>
 
@@ -783,7 +790,7 @@
       </div>
     </div>
 
-    <!-- ADMIN LOGIN (hidden - use ?admin=true URL) -->
+    <!-- ADMIN LOGIN -->
     <div id="admin-login-form" style="width:100%; display:none">
       <div class="card" style="padding:24px; border-color: var(--gold)">
         <h2 style="text-align:center; margin-bottom:20px; font-size:18px; color:var(--gold)">🔐 Admin Panel</h2>
@@ -795,23 +802,6 @@
 </div>
 
 <!-- ===== MAIN APP ===== -->
-
-<!-- ===== ADMIN AUTH SCREEN ===== -->
-<div id="screen-admin-auth" class="screen">
-  <div class="auth-screen">
-    <div class="auth-logo" style="font-size:30px">🔐 Admin</div>
-    <div class="auth-tagline">TonNeed Admin Panel</div>
-    <div class="card" style="padding:24px; border-color:var(--gold); width:100%">
-      <h2 style="text-align:center; margin-bottom:20px; font-size:18px; color:var(--gold)">Admin Login</h2>
-      <div class="input-group">
-        <label class="input-label">🔑 Admin Password</label>
-        <input type="password" class="input-field" id="admin-auth-pass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') doAdminAuth()">
-      </div>
-      <button class="btn btn-gold" style="margin-top:8px" onclick="doAdminAuth()">🔐 Enter Panel</button>
-    </div>
-  </div>
-</div>
-
 <div id="screen-app" class="screen">
   <!-- HEADER -->
   <div class="header">
@@ -849,7 +839,7 @@
       <!-- MINING ORB -->
       <div class="mining-orb-wrap">
         <div class="orb-ring-2"></div>
-        <div class="mining-orb" id="miningOrb" onclick="startMining()">
+        <div class="mining-orb" id="miningOrb">
           <div class="orb-ring"></div>
           <div class="orb-text">
             <div>⛏️</div>
@@ -1107,6 +1097,10 @@
       <span class="nav-icon">🏆</span>
       <span>Levels</span>
     </button>
+    <button class="nav-btn" onclick="confirmExit()" style="color:#FF4444">
+      <span class="nav-icon">🚪</span>
+      <span>Exit</span>
+    </button>
   </div>
 </div>
 
@@ -1114,7 +1108,7 @@
 <div id="screen-admin" class="screen">
   <div class="header">
     <span class="logo" style="font-size:16px">Admin 🔐</span>
-    
+    <button class="btn btn-sm btn-outline" onclick="logoutAdmin()" style="font-size:11px; padding:6px 12px">Logout</button>
   </div>
 
   <div class="container pb-nav" style="padding-top:20px">
@@ -1122,26 +1116,39 @@
     <!-- STATS -->
     <div class="mining-stats" style="margin-bottom:16px">
       <div class="stat-card">
-        <div class="stat-label">المستخدمون</div>
+        <div class="stat-label">Users</div>
         <div class="stat-value" id="admin-total-users">0</div>
-        <div class="stat-unit">مستخدم</div>
+        <div class="stat-unit">Users</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">السحوبات</div>
+        <div class="stat-label">Withdrawals</div>
         <div class="stat-value" id="admin-pending-w">0</div>
-        <div class="stat-unit">معلّقة</div>
+        <div class="stat-unit">Pending</div>
       </div>
     </div>
 
-    <!-- ALL USERS - أول شيء -->
-    <div class="card" style="border-color:rgba(0,170,255,0.4)">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-        <div class="section-title" style="margin-bottom:0">👥 كل المشتركين <span id="admin-users-count" style="font-size:12px; color:var(--muted); font-weight:400"></span></div>
-        <button class="btn btn-sm" onclick="refreshFromFirebase()" style="font-size:11px; padding:6px 12px; background:linear-gradient(135deg,#00C853,#00E676); color:#003300; font-weight:700">🔄 تحديث</button>
+    <!-- COMMISSION SETTINGS -->
+    <div class="card" style="border-color:rgba(255,184,0,0.4)">
+      <div class="section-title" style="color:var(--gold)">⚙️ Referral Commission Per Level</div>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:14px">Set the % commission sent to the referrer when an invited user upgrades</div>
+      <div id="commissions-settings-list"></div>
+      <button class="btn btn-gold" style="margin-top:4px" onclick="saveCommissions()">💾 Save Settings</button>
+    </div>
+
+    <!-- PENDING PAYOUTS -->
+    <div class="card">
+      <div class="section-title">💸 Referral Commission Payouts</div>
+      <div id="admin-payouts-list">
+        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No pending payouts</div>
       </div>
+    </div>
+
+    <!-- ALL USERS -->
+    <div class="card">
+      <div class="section-title">👥 All Users <span id="admin-users-count" style="font-size:12px; color:var(--muted); font-weight:400"></span></div>
       <div style="display:flex; gap:8px; margin-bottom:10px">
-        <input type="text" class="search-input" id="admin-search-id" placeholder="🔍 ابحث بالـ ID أو الاسم..." oninput="renderAdminUsers()"
-          style="flex:1; background:rgba(0,136,204,0.08); border:1px solid var(--border); border-radius:10px; color:var(--text); padding:10px; font-size:13px; outline:none; margin-bottom:0">
+        <input type="number" class="search-input" id="admin-search-id" placeholder="🔍 ابحث بالـ ID..." oninput="renderAdminUsers()"
+          style="flex:1; background:rgba(0,136,204,0.08); border:1px solid var(--border); border-radius:10px; color:var(--text); padding:10px; font-size:13px; outline:none">
         <button class="btn btn-sm btn-outline" onclick="document.getElementById('admin-search-id').value=''; renderAdminUsers()" style="padding:8px 14px; font-size:12px">✕</button>
       </div>
       <div id="admin-users-list"></div>
@@ -1149,26 +1156,10 @@
 
     <!-- WITHDRAWAL REQUESTS -->
     <div class="card">
-      <div class="section-title">📤 طلبات السحب</div>
+      <div class="section-title">📤 Withdrawals</div>
       <div id="admin-withdrawals-list">
-        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">لا توجد طلبات سحب</div>
+        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No withdrawal requests</div>
       </div>
-    </div>
-
-    <!-- PENDING PAYOUTS -->
-    <div class="card">
-      <div class="section-title">💸 عمولات الإحالة</div>
-      <div id="admin-payouts-list">
-        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">لا توجد عمولات معلّقة</div>
-      </div>
-    </div>
-
-    <!-- COMMISSION SETTINGS -->
-    <div class="card" style="border-color:rgba(255,184,0,0.4)">
-      <div class="section-title" style="color:var(--gold)">⚙️ نسبة العمولة لكل مستوى</div>
-      <div style="font-size:12px; color:var(--muted); margin-bottom:14px">نسبة العمولة المرسلة للمحيل عند ترقية المستخدم المدعو</div>
-      <div id="commissions-settings-list"></div>
-      <button class="btn btn-gold" style="margin-top:4px" onclick="saveCommissions()">💾 حفظ الإعدادات</button>
     </div>
 
   </div>
@@ -1235,11 +1226,52 @@ function loadDb(callback) {
     const data = snapshot.val();
     if (data) {
       db = data;
-      if (!db.commissions) db.commissions = { 2:10,3:10,4:10,5:10,6:10,7:10,8:10,9:10,10:10 };
+      // Ensure commissions exist
+      if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
     }
-    if (!db.commissions) db.commissions = { 2:10,3:10,4:10,5:10,6:10,7:10,8:10,9:10,10:10 };
     callback();
-  }).catch(() => { callback(); });
+  }).catch(() => {
+    // fallback to localStorage
+    callback();
+  });
+}
+
+// ===== TELEGRAM WEBAPP =====
+const tgWebApp = window.Telegram && window.Telegram.WebApp;
+if (tgWebApp) {
+  tgWebApp.ready();
+  tgWebApp.expand();
+}
+
+function getTelegramUserId() {
+  try {
+    if (tgWebApp && tgWebApp.initDataUnsafe && tgWebApp.initDataUnsafe.user) {
+      return 'tg_' + tgWebApp.initDataUnsafe.user.id;
+    }
+  } catch(e) {}
+  return null;
+}
+
+function getTelegramUserName() {
+  try {
+    if (tgWebApp && tgWebApp.initDataUnsafe && tgWebApp.initDataUnsafe.user) {
+      const u = tgWebApp.initDataUnsafe.user;
+      return u.first_name + (u.last_name ? ' ' + u.last_name : '');
+    }
+  } catch(e) {}
+  return null;
+}
+
+// ===== TELEGRAM NOTIFICATIONS =====
+const TG_TOKEN = '8098144295:AAEMYi2AIq3x4tO5BTf5QOtfD2L5YmGIS_0';
+const TG_CHAT = '7871311618';
+
+function sendTelegram(msg) {
+  fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ chat_id: TG_CHAT, text: msg, parse_mode: 'HTML' })
+  }).catch(() => {});
 }
 
 // ===== DATA STORE =====
@@ -1248,7 +1280,7 @@ const DEFAULT_COMMISSIONS = {
   2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 10, 10: 10
 };
 
-let db = {
+let db = JSON.parse(localStorage.getItem('tonneed_db') || JSON.stringify({
   users: [{
     id: 555497,
     name: 'Admin Root',
@@ -1268,28 +1300,28 @@ let db = {
   withdrawals: [],
   payouts: [],
   nextId: 100001,
-  commissions: { 2:10,3:10,4:10,5:10,6:10,7:10,8:10,9:10,10:10 }
-};
+  commissions: { ...DEFAULT_COMMISSIONS }
+}));
 
 // Ensure commissions exist in older DB versions
 if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
 
 const ADMIN_PASS = 'TonNeed@Admin2024';
 const PROJECT_WALLET = 'UQA-TmMKLnasH4aP1TG114M6Qqbz38DFs_5zkKU4vaoV3pi2';
-const LAUNCH_DATE = new Date('2026-03-06').getTime();
+const LAUNCH_DATE = new Date('2026-03-08').getTime();
 
 const LEVELS = [
-  { level: 0,  name: 'Free',         price: 0,  speed: 0.05, interval: 48 },
-  { level: 1,  name: 'Beginner',     price: 0,  speed: 0.1,  interval: 48 },
-  { level: 2,  name: 'Trainee',      price: 1,  speed: 0.5,  interval: 48 },
-  { level: 3,  name: 'Intermediate', price: 2,  speed: 1.0,  interval: 48 },
-  { level: 4,  name: 'Advanced',     price: 4,  speed: 2.0,  interval: 48 },
-  { level: 5,  name: 'Professional', price: 6,  speed: 3.0,  interval: 48 },
-  { level: 6,  name: 'Expert',       price: 8,  speed: 4.0,  interval: 48 },
-  { level: 7,  name: 'Master',       price: 10, speed: 5.0,  interval: 48 },
-  { level: 8,  name: 'Elite',        price: 12, speed: 6.0,  interval: 48 },
-  { level: 9,  name: 'Legend',       price: 14, speed: 7.0,  interval: 48 },
-  { level: 10, name: 'Grand Master', price: 16, speed: 8.0,  interval: 48 },
+  { level: 0,  name: 'Free',         price: 0,  speed: 0.05, interval: 24 },
+  { level: 1,  name: 'Beginner',     price: 0,  speed: 0.1,  interval: 24 },
+  { level: 2,  name: 'Trainee',      price: 1,  speed: 0.5,  interval: 24 },
+  { level: 3,  name: 'Intermediate', price: 2,  speed: 1.0,  interval: 24 },
+  { level: 4,  name: 'Advanced',     price: 4,  speed: 2.0,  interval: 24 },
+  { level: 5,  name: 'Professional', price: 6,  speed: 3.0,  interval: 24 },
+  { level: 6,  name: 'Expert',       price: 8,  speed: 4.0,  interval: 24 },
+  { level: 7,  name: 'Master',       price: 10, speed: 5.0,  interval: 24 },
+  { level: 8,  name: 'Elite',        price: 12, speed: 6.0,  interval: 24 },
+  { level: 9,  name: 'Legend',       price: 14, speed: 7.0,  interval: 24 },
+  { level: 10, name: 'Grand Master', price: 16, speed: 8.0,  interval: 24 },
 ];
 
 function getCommission(level) {
@@ -1342,38 +1374,29 @@ function showAdminLogin() {
 
 // Generate device fingerprint
 function getDeviceId() {
-  const nav = window.navigator;
-  const raw = [
-    nav.userAgent, nav.language,
-    screen.width + 'x' + screen.height,
-    screen.colorDepth,
-    new Date().getTimezoneOffset(),
-    nav.hardwareConcurrency || '',
-    nav.platform || ''
-  ].join('|');
-  let hash = 0;
-  for (let i = 0; i < raw.length; i++) {
-    hash = ((hash << 5) - hash) + raw.charCodeAt(i);
-    hash |= 0;
+  try {
+    const nav = window.navigator;
+    const raw = [
+      nav.userAgent || '',
+      nav.language || '',
+      (screen && screen.width ? screen.width + 'x' + screen.height : '0x0'),
+      (screen && screen.colorDepth ? screen.colorDepth : ''),
+      new Date().getTimezoneOffset(),
+      nav.hardwareConcurrency || '',
+      nav.platform || ''
+    ].join('|');
+    let hash = 0;
+    for (let i = 0; i < raw.length; i++) {
+      hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+      hash |= 0;
+    }
+    // Use Telegram user ID as part of device ID if available
+    const tgId = getTelegramUserId();
+    if (tgId) return 'dev_tg_' + tgId;
+    return 'dev_' + Math.abs(hash).toString(36);
+  } catch(e) {
+    return 'dev_' + Date.now().toString(36);
   }
-  return 'dev_' + Math.abs(hash).toString(36);
-}
-
-
-// ===== TELEGRAM NOTIFICATIONS =====
-const TG_BOT_TOKEN = '8098144295:AAEMYi2AIq3x4tO5BTf5QOtfD2L5YmGIS_0';
-const TG_CHAT_ID = '7871311618';
-
-function sendTelegramNotification(message) {
-  fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      chat_id: TG_CHAT_ID,
-      text: message,
-      parse_mode: 'HTML'
-    })
-  }).catch(err => console.log('TG notify error:', err));
 }
 
 function doRegister() {
@@ -1398,6 +1421,20 @@ function doRegister() {
     return;
   }
 
+  // 🚫 Block duplicate Telegram account
+  const tgId = getTelegramUserId();
+  if (tgId) {
+    const existingTg = db.users.find(u => u.telegramId === tgId);
+    if (existingTg) {
+      showToast('❌ حساب Telegram هذا مسجل مسبقاً!');
+      setTimeout(() => {
+        showLogin();
+        document.getElementById('login-wallet').value = existingTg.wallet;
+      }, 1500);
+      return;
+    }
+  }
+
   // 🚫 Block duplicate device
   const deviceId = getDeviceId();
   const existingDevice = db.users.find(u => u.deviceId === deviceId);
@@ -1418,7 +1455,7 @@ function doRegister() {
 
   const newUser = {
     id: db.nextId++,
-    name,
+    name: getTelegramUserName() || name,
     wallet,
     password: pass,
     level: 1,
@@ -1431,6 +1468,7 @@ function doRegister() {
     refCommission: 0,
     txHistory: [],
     deviceId: deviceId,
+    telegramId: getTelegramUserId() || null,
     createdAt: Date.now()
   };
 
@@ -1441,17 +1479,11 @@ function doRegister() {
   if (upline) upline.referrals.push(newUser.id);
 
   saveDb();
-
-  // إشعار تيليغرام - تسجيل جديد
-  sendTelegramNotification(
-    `🆕 <b>مستخدم جديد!</b>\n` +
-    `👤 الاسم: ${newUser.name}\n` +
-    `🆔 ID: ${newUser.id}\n` +
-    `👛 المحفظة: ${newUser.wallet}\n` +
-    `🔗 المحيل: ${newUser.uplineId || 'لا يوجد'}\n` +
-    `📅 التاريخ: ${new Date().toLocaleString('ar')}`
-  );
-
+  sendTelegram(`🆕 <b>مستخدم جديد!</b>
+👤 الاسم: ${newUser.name}
+🆔 ID: ${newUser.id}
+👛 المحفظة: ${newUser.wallet}
+📅 التاريخ: ${new Date().toLocaleString('ar')}`);
   showToast('✅ Account created! Welcome ' + newUser.name);
   setTimeout(() => { loginUser(newUser); }, 1000);
 }
@@ -1464,6 +1496,17 @@ function doLogin() {
   if (!wallet.startsWith('UQ')) return showToast('❌ Wallet must start with UQ');
   const user = db.users.find(u => u.wallet === wallet && u.password === pass);
   if (!user) return showToast('❌ Incorrect wallet or password');
+
+  // 🚫 Block duplicate Telegram on login
+  const tgId = getTelegramUserId();
+  if (tgId && user.telegramId && user.telegramId !== tgId) {
+    return showToast('❌ هذا الحساب مرتبط بحساب Telegram آخر!');
+  }
+  // Save telegramId if not set
+  if (tgId && !user.telegramId) {
+    user.telegramId = tgId;
+    saveDb();
+  }
 
   // Update device ID on login (allow legitimate re-login on new device)
   const deviceId = getDeviceId();
@@ -1482,25 +1525,45 @@ function doLogin() {
 }
 
 function doAdminLogin() {
-  // قديمة - محولة للشاشة الجديدة
-  showScreen('admin-auth');
-}
-
-function doAdminAuth() {
-  const pass = document.getElementById('admin-auth-pass').value;
-  if (pass === ADMIN_PASS) {
-    loadDb(() => {
-      showScreen('admin');
-      renderAdminPanel();
-    });
-  } else {
-    showToast('❌ Wrong password');
-    document.getElementById('admin-auth-pass').value = '';
-  }
+  showScreen('admin');
+  renderAdminPanel();
 }
 
 function loginUser(user) {
   currentUser = user;
+  const dbUser = db.users.find(u => u.id === user.id);
+
+  if (dbUser) {
+    const lvl = LEVELS[dbUser.level - 1];
+    const total = lvl.interval * 3600 * 1000;
+
+    if (!dbUser.miningStart) {
+      // لم يبدأ التعدين أبداً — ابدأه الآن
+      dbUser.miningStart = Date.now();
+      saveDb();
+    } else {
+      // حساب كم دورة انتهت أثناء الغياب
+      const elapsed = Date.now() - dbUser.miningStart;
+      if (elapsed >= total) {
+        const cyclesCompleted = Math.floor(elapsed / total);
+        const earned = cyclesCompleted * lvl.speed;
+        dbUser.balance = parseFloat((dbUser.balance + earned).toFixed(4));
+        dbUser.totalEarned = (dbUser.totalEarned || 0) + earned;
+        dbUser.txHistory.unshift({
+          type: 'mine',
+          amount: earned,
+          date: Date.now(),
+          desc: `Mining x${cyclesCompleted} cycles (offline)`
+        });
+        // ابدأ دورة جديدة من وقت انتهاء آخر دورة
+        dbUser.miningStart = dbUser.miningStart + (cyclesCompleted * total);
+        saveDb();
+        setTimeout(() => showToast(`🎉 Offline mining: +${earned.toFixed(4)} TON!`), 1500);
+      }
+    }
+    currentUser = dbUser;
+  }
+
   showScreen('app');
   renderApp();
   showTab('home');
@@ -1538,7 +1601,7 @@ function renderApp() {
   const lvl = LEVELS[user.level - 1];
   document.getElementById('user-id-display').textContent = `ID: ${user.id}`;
   document.getElementById('home-level-badge').textContent = `${getLevelIcon(user.level)} Level ${user.level}`;
-  document.getElementById('home-speed').textContent = `${lvl.speed} TON/48h`;
+  document.getElementById('home-speed').textContent = `${lvl.speed} TON/24h`;
   document.getElementById('balance-display').textContent = user.balance.toFixed(4);
   document.getElementById('total-refs').textContent = user.referrals.length;
   document.getElementById('earned-today').textContent = (lvl.speed / 2).toFixed(4);
@@ -1673,23 +1736,31 @@ function collectMining() {
 function completeMining() {
   const user = db.users.find(u => u.id === currentUser.id);
   const lvl = LEVELS[user.level - 1];
-  user.balance += lvl.speed;
-  user.totalEarned += lvl.speed;
-  user.miningStart = null;
+  user.balance = parseFloat((user.balance + lvl.speed).toFixed(4));
+  user.totalEarned = (user.totalEarned || 0) + lvl.speed;
   user.txHistory.unshift({ type: 'mine', amount: lvl.speed, date: Date.now(), desc: 'Mining Completed' });
+  // ✅ إعادة التعدين تلقائياً بدون توقف
+  user.miningStart = Date.now();
   saveDb();
   currentUser = user;
-  document.getElementById('mining-counter-wrap').style.display = 'none';
-  document.getElementById('orb-status').textContent = '✅';
-  document.getElementById('orb-sub').textContent = 'Completed!';
   document.getElementById('balance-display').textContent = user.balance.toFixed(4);
-  showToast(`🎉 Mined ${lvl.speed} TON!`);
-  setTimeout(renderApp, 2000);
+  checkWithdraw();
+  showToast(`🎉 +${lvl.speed} TON! ⛏️ Auto-restarted!`);
+  // استمر في التعدين
+  renderMiningTimer();
 }
 
 function collectNow() {
   const user = db.users.find(u => u.id === currentUser.id);
-  if (!user.miningStart) { showToast('⛏️ Start mining first!'); return; }
+  if (!user.miningStart) {
+    // إذا لم يكن التعدين شغالاً، ابدأه تلقائياً
+    user.miningStart = Date.now();
+    saveDb();
+    currentUser = user;
+    renderMiningTimer();
+    showToast('⛏️ Mining started!');
+    return;
+  }
   const lvl = LEVELS[user.level - 1];
   const total = lvl.interval * 3600 * 1000;
   const elapsed = Date.now() - user.miningStart;
@@ -1698,14 +1769,17 @@ function collectNow() {
   user.balance = parseFloat((user.balance + earned).toFixed(4));
   user.totalEarned = (user.totalEarned || 0) + earned;
   user.txHistory.unshift({ type: 'mine', amount: earned, date: Date.now(), desc: 'Mining Collected' });
-  // إعادة تشغيل التعدين تلقائياً
+  // ✅ إعادة تشغيل العداد من الصفر فوراً
   user.miningStart = Date.now();
   saveDb();
   currentUser = user;
-  if (window.timerInterval) clearInterval(window.timerInterval);
+  if (timerInterval) clearInterval(timerInterval);
   document.getElementById('balance-display').textContent = user.balance.toFixed(4);
+  // إعادة ضبط العداد المرئي إلى صفر ثم يبدأ
+  const counter = document.getElementById('live-ton-counter');
+  if (counter) counter.textContent = '0.000000';
   checkWithdraw();
-  showToast('💰 ' + earned.toFixed(4) + ' TON Collected! ⛏️ Mining restarted!');
+  showToast('💰 +' + earned.toFixed(4) + ' TON! ⛏️ Mining restarted!');
   renderMiningTimer();
 }
 
@@ -1888,17 +1962,12 @@ function confirmUpgrade() {
 
   db.payouts.push(payout);
   saveDb();
-  // إشعار تيليغرام - طلب ترقية
-  const upUser = db.users.find(u => u.id === currentUser.id);
-  sendTelegramNotification(
-    `⬆️ <b>طلب ترقية جديد!</b>\n` +
-    `👤 الاسم: ${upUser ? upUser.name : '---'}\n` +
-    `🆔 ID: ${currentUser.id}\n` +
-    `📊 الترقية: Level ${payout.upgradeLevel}\n` +
-    `💰 المبلغ: ${payout.upgradePrice} TON\n` +
-    `👛 المحفظة: ${upUser ? upUser.wallet : '---'}`
-  );
-
+  sendTelegram(`⬆️ <b>طلب ترقية!</b>
+👤 الاسم: ${user.name}
+🆔 ID: ${user.id}
+📊 المستوى: ${lvl.level} — ${lvl.name}
+💰 المبلغ: ${lvl.price} TON
+👛 المحفظة: ${user.wallet}`);
   closeModal('upgrade-modal');
   showToast('✅ Upgrade request sent! Will be activated within 24 hours');
 }
@@ -1972,6 +2041,12 @@ function confirmWithdraw() {
 
   db.withdrawals.push(withdrawal);
   saveDb();
+  sendTelegram(`💸 <b>طلب سحب!</b>
+👤 الاسم: ${user.name}
+🆔 ID: ${user.id}
+💰 المبلغ: ${amount.toFixed(4)} TON
+👛 المحفظة: ${user.wallet}
+📅 التاريخ: ${new Date().toLocaleString('ar')}`);
   currentUser = user;
 
   closeModal('withdraw-modal');
@@ -2016,46 +2091,14 @@ function saveCommissions() {
   showToast('✅ Commission rates saved!');
 }
 
-
-function refreshFromFirebase() {
-  showToast('🔄 جاري تحديث البيانات...');
-  firebaseDb.ref('tonneed').once('value').then(snapshot => {
-    const data = snapshot.val();
-    if (data) {
-      db = data;
-      if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
-      localStorage.setItem('tonneed_db', JSON.stringify(db));
-      renderAdminPanel();
-      showToast('✅ تم التحديث! المستخدمون: ' + db.users.length);
-    } else {
-      showToast('⚠️ لا توجد بيانات في Firebase');
-    }
-  }).catch(() => showToast('❌ خطأ في الاتصال'));
-}
-
 function renderAdminPanel() {
-  const list = document.getElementById('admin-users-list');
-  if (list) list.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted)">⏳ جاري تحميل البيانات...</div>';
-
-  firebaseDb.ref('tonneed').once('value').then(snapshot => {
-    const data = snapshot.val();
-    if (data) {
-      db = data;
-      if (!db.commissions) db.commissions = {2:10,3:10,4:10,5:10,6:10,7:10,8:10,9:10,10:10};
-    }
-    document.getElementById('admin-total-users').textContent = db.users.length;
-    document.getElementById('admin-pending-w').textContent = (db.withdrawals||[]).filter(w=>w.status==='pending').length;
-    renderCommissionsSettings();
-    renderAdminPayouts();
-    renderAdminUsers();
-    renderAdminWithdrawals();
-  }).catch(err => {
-    if (list) list.innerHTML = '<div style="text-align:center;padding:30px;color:red">❌ خطأ في الاتصال بـ Firebase</div>';
-    console.error(err);
-  });
+  document.getElementById('admin-total-users').textContent = db.users.length;
+  document.getElementById('admin-pending-w').textContent = db.withdrawals.filter(w => w.status === 'pending').length;
+  renderCommissionsSettings();
+  renderAdminPayouts();
+  renderAdminUsers();
+  renderAdminWithdrawals();
 }
-
-
 
 function renderAdminPayouts() {
   const pending = db.payouts.filter(p => p.status === 'pending');
@@ -2134,7 +2177,7 @@ function activateUpgrade(payoutId) {
 function renderAdminUsers() {
   const q = (document.getElementById('admin-search-id').value || '').trim();
   const filtered = q
-    ? db.users.filter(u => String(u.id).includes(q) || (u.name||'').toLowerCase().includes(q.toLowerCase()))
+    ? db.users.filter(u => String(u.id).includes(q))
     : db.users;
 
   const countEl = document.getElementById('admin-users-count');
@@ -2143,63 +2186,52 @@ function renderAdminUsers() {
   const list = document.getElementById('admin-users-list');
 
   if (!filtered.length) {
-    list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">❌ لا يوجد مستخدم بهذا الـ ID</div>';
+    list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">❌ No user found with this ID</div>';
     return;
   }
 
-  list.innerHTML = filtered.map(u => {
-    const joinDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-EG') : '---';
-    const daysSince = u.createdAt ? Math.floor((Date.now() - u.createdAt) / (1000*60*60*24)) : 0;
-    const walletEsc = (u.wallet||'').replace(/'/g, "\'");
-    const uplineUser = db.users.find(x => x.id === u.uplineId);
-    return `
-    <div style="background:rgba(0,136,204,0.06); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:12px">
-      
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
-        <div style="font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:var(--ton-light)">🆔 ${u.id}</div>
-        <span class="ref-level-badge" style="font-size:11px; padding:4px 10px">${getLevelIcon(u.level)} Lv${u.level} — ${(LEVELS[u.level-1]||LEVELS[0]).name}</span>
+  list.innerHTML = filtered.map(u => `
+    <div style="background:rgba(0,136,204,0.06); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
+        <div style="font-family:'Orbitron',monospace; font-size:16px; font-weight:900; color:var(--ton-light)">ID: ${u.id}</div>
+        <span class="ref-level-badge" style="font-size:12px; padding:4px 12px">${getLevelIcon(u.level)} Lv${u.level} — ${(LEVELS[u.level-1]||LEVELS[0]).name}</span>
       </div>
-
-      <div style="font-size:14px; font-weight:700; margin-bottom:8px; color:var(--text)">👤 ${u.name}</div>
-
-      <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px">
-        <span style="font-size:10px; font-family:'Orbitron',monospace; color:var(--ton-light); word-break:break-all; flex:1">👛 ${u.wallet}</span>
-        <button class="copy-btn" style="font-size:10px; padding:4px 8px; flex-shrink:0" onclick="navigator.clipboard.writeText('${walletEsc}').then(()=>showToast('✅ تم النسخ!'))">نسخ</button>
+      <div style="font-size:14px; font-weight:700; margin-bottom:6px">👤 ${u.name}</div>
+      <div style="font-size:10px; font-family:'Orbitron',monospace; color:var(--ton-light); background:rgba(0,0,0,0.3); border-radius:8px; padding:8px; word-break:break-all; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px">
+        <span style="flex:1">👛 ${u.wallet}</span>
+        <button class="copy-btn" style="font-size:10px; padding:4px 8px; flex-shrink:0" onclick="navigator.clipboard.writeText('${u.wallet.replace(/'/g,"\'")}').then(()=>showToast('✅ Copied!'))">Copy</button>
       </div>
-
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px">
+      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px">
         <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted); margin-bottom:2px">💰 الرصيد</div>
+          <div style="font-size:10px; color:var(--muted)">Balance</div>
           <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--green); font-weight:700">${u.balance.toFixed(4)}</div>
-          <div style="font-size:9px; color:var(--muted)">TON</div>
         </div>
         <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted); margin-bottom:2px">👥 المحالون</div>
+          <div style="font-size:10px; color:var(--muted)">Referrals</div>
           <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--gold); font-weight:700">${u.referrals.length}</div>
-          <div style="font-size:9px; color:var(--muted)">مستخدم</div>
         </div>
         <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted); margin-bottom:2px">💸 المسحوب</div>
+          <div style="font-size:10px; color:var(--muted)">Withdrawn</div>
           <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--ton-light); font-weight:700">${(u.totalWithdrawn||0).toFixed(4)}</div>
-          <div style="font-size:9px; color:var(--muted)">TON</div>
-        </div>
-        <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted); margin-bottom:2px">📅 تاريخ الانضمام</div>
-          <div style="font-size:12px; color:var(--text); font-weight:700">${joinDate}</div>
-          <div style="font-size:9px; color:var(--muted)">${daysSince} يوم</div>
         </div>
       </div>
-
-      <div style="font-size:11px; color:var(--muted); padding:6px 10px; background:rgba(0,0,0,0.15); border-radius:6px; margin-bottom:8px">
-        🔗 المحيل: <span style="color:var(--ton-light); font-weight:700">${u.uplineId || 'لا يوجد'}</span>
-        ${uplineUser ? ' — ' + uplineUser.name : ''}
+      <div style="display:flex; gap:8px; margin-top:4px">
+        <button class="btn btn-sm btn-outline" onclick="showUserTree(${u.id})" style="flex:1; font-size:12px">🌳 View Tree</button>
+        <button class="btn btn-sm" onclick="resetUserBalance(${u.id})" style="flex:1; font-size:12px; background:rgba(255,68,68,0.15); border:1px solid rgba(255,68,68,0.4); color:#FF4444; border-radius:8px; cursor:pointer; padding:8px">🔴 تصفير الرصيد</button>
       </div>
-
-      <button class="btn btn-sm btn-outline" onclick="showUserTree(${u.id})" style="width:100%; font-size:12px">🌳 عرض الشجرة</button>
     </div>
-  `;}).join('');
+  `).join('');
 }
 
+function resetUserBalance(userId) {
+  const user = db.users.find(u => u.id === userId);
+  if (!user) return;
+  if (!confirm(`⚠️ هل أنت متأكد من تصفير رصيد المستخدم "${user.name}" (ID: ${userId})؟\nالرصيد الحالي: ${user.balance.toFixed(4)} TON`)) return;
+  user.balance = 0;
+  saveDb();
+  renderAdminUsers();
+  showToast('✅ تم تصفير الرصيد بنجاح');
+}
 
 function showUserTree(userId) {
   const user = db.users.find(u => u.id === userId);
@@ -2286,7 +2318,7 @@ function rejectWithdrawal(wId) {
   }
 }
 
-function logoutAdmin() { window.location.href = window.location.pathname + '?admin=true'; }
+function logoutAdmin() { showScreen('auth'); showLogin(); }
 
 // ===== UTILS =====
 function copyRef() {
@@ -2312,8 +2344,79 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 3000);
 }
 
+// ===== EXIT & PAGE PROTECTION =====
+function confirmExit() {
+  const modal = document.getElementById('exit-modal');
+  modal.style.display = 'flex';
+}
+
+function closeExitModal() {
+  document.getElementById('exit-modal').style.display = 'none';
+}
+
+function doExit() {
+  // حفظ البيانات قبل الخروج
+  if (currentUser) saveDb();
+  // إغلاق تيليغرام WebApp أو إغلاق النافذة
+  if (tgWebApp) {
+    tgWebApp.close();
+  } else {
+    window.close();
+    // fallback لو window.close() لم يعمل
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#040D1A;color:#E8F4FF;font-family:Orbitron,monospace;font-size:18px;text-align:center;flex-direction:column;gap:16px"><div style=\"font-size:48px\">✅</div><div>You can close this tab</div><div style=\"font-size:12px;color:rgba(232,244,255,0.5)\">⛏️ Mining continues in background</div></div>';
+  }
+}
+
+// منع الخروج العرضي بالضغط على Back أو إغلاق التبويب
+window.addEventListener('beforeunload', function(e) {
+  if (currentUser) {
+    saveDb();
+    e.preventDefault();
+    e.returnValue = '⛏️ Mining is running! Are you sure you want to leave?';
+    return e.returnValue;
+  }
+});
+
+// Telegram back button - منع الرجوع للخلف
+if (tgWebApp) {
+  tgWebApp.BackButton.onClick(function() {
+    confirmExit();
+  });
+}
+
+// ===== VISIBILITY CHANGE - حساب التعدين حتى لو الصفحة مخفية =====
+document.addEventListener('visibilitychange', function() {
+  if (document.visibilityState === 'visible' && currentUser) {
+    // عند العودة للصفحة، تحقق إذا انتهى التعدين وأعد تشغيله
+    const user = db.users.find(u => u.id === currentUser.id);
+    if (user && user.miningStart) {
+      const lvl = LEVELS[user.level - 1];
+      const total = lvl.interval * 3600 * 1000;
+      const elapsed = Date.now() - user.miningStart;
+      if (elapsed >= total) {
+        // انتهى التعدين أثناء الغياب - اجمع وأعد التشغيل
+        completeMining();
+      } else {
+        renderMiningTimer();
+      }
+    }
+  }
+});
+
 // Check ref in URL
 window.addEventListener('load', () => {
+  // ربط زر التعدين بـ addEventListener بدلاً من onclick
+  const orbEl = document.getElementById('miningOrb');
+  if (orbEl) {
+    orbEl.addEventListener('click', startMining);
+    orbEl.addEventListener('touchend', function(e) {
+      e.preventDefault();
+      startMining();
+    }, { passive: false });
+  }
+
+  // مسح البيانات القديمة من localStorage
+  localStorage.removeItem('tonneed_db');
   loadDb(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
