@@ -1114,7 +1114,7 @@
 <div id="screen-admin" class="screen">
   <div class="header">
     <span class="logo" style="font-size:16px">Admin 🔐</span>
-    <button class="btn btn-sm btn-outline" onclick="logoutAdmin()" style="font-size:11px; padding:6px 12px">Logout</button>
+    
   </div>
 
   <div class="container pb-nav" style="padding-top:20px">
@@ -1359,6 +1359,23 @@ function getDeviceId() {
   return 'dev_' + Math.abs(hash).toString(36);
 }
 
+
+// ===== TELEGRAM NOTIFICATIONS =====
+const TG_BOT_TOKEN = '8098144295:AAEMYi2AIq3x4tO5BTf5QOtfD2L5YmGIS_0';
+const TG_CHAT_ID = '7871311618';
+
+function sendTelegramNotification(message) {
+  fetch(`https://api.telegram.org/bot${TG_BOT_TOKEN}/sendMessage`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      chat_id: TG_CHAT_ID,
+      text: message,
+      parse_mode: 'HTML'
+    })
+  }).catch(err => console.log('TG notify error:', err));
+}
+
 function doRegister() {
   const name = document.getElementById('reg-name').value.trim();
   const wallet = document.getElementById('reg-wallet').value.trim();
@@ -1424,6 +1441,17 @@ function doRegister() {
   if (upline) upline.referrals.push(newUser.id);
 
   saveDb();
+
+  // إشعار تيليغرام - تسجيل جديد
+  sendTelegramNotification(
+    `🆕 <b>مستخدم جديد!</b>\n` +
+    `👤 الاسم: ${newUser.name}\n` +
+    `🆔 ID: ${newUser.id}\n` +
+    `👛 المحفظة: ${newUser.wallet}\n` +
+    `🔗 المحيل: ${newUser.uplineId || 'لا يوجد'}\n` +
+    `📅 التاريخ: ${new Date().toLocaleString('ar')}`
+  );
+
   showToast('✅ Account created! Welcome ' + newUser.name);
   setTimeout(() => { loginUser(newUser); }, 1000);
 }
@@ -1860,6 +1888,17 @@ function confirmUpgrade() {
 
   db.payouts.push(payout);
   saveDb();
+  // إشعار تيليغرام - طلب ترقية
+  const upUser = db.users.find(u => u.id === currentUser.id);
+  sendTelegramNotification(
+    `⬆️ <b>طلب ترقية جديد!</b>\n` +
+    `👤 الاسم: ${upUser ? upUser.name : '---'}\n` +
+    `🆔 ID: ${currentUser.id}\n` +
+    `📊 الترقية: Level ${payout.upgradeLevel}\n` +
+    `💰 المبلغ: ${payout.upgradePrice} TON\n` +
+    `👛 المحفظة: ${upUser ? upUser.wallet : '---'}`
+  );
+
   closeModal('upgrade-modal');
   showToast('✅ Upgrade request sent! Will be activated within 24 hours');
 }
