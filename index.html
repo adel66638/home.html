@@ -1122,39 +1122,26 @@
     <!-- STATS -->
     <div class="mining-stats" style="margin-bottom:16px">
       <div class="stat-card">
-        <div class="stat-label">Users</div>
+        <div class="stat-label">المستخدمون</div>
         <div class="stat-value" id="admin-total-users">0</div>
-        <div class="stat-unit">Users</div>
+        <div class="stat-unit">مستخدم</div>
       </div>
       <div class="stat-card">
-        <div class="stat-label">Withdrawals</div>
+        <div class="stat-label">السحوبات</div>
         <div class="stat-value" id="admin-pending-w">0</div>
-        <div class="stat-unit">Pending</div>
+        <div class="stat-unit">معلّقة</div>
       </div>
     </div>
 
-    <!-- COMMISSION SETTINGS -->
-    <div class="card" style="border-color:rgba(255,184,0,0.4)">
-      <div class="section-title" style="color:var(--gold)">⚙️ Referral Commission Per Level</div>
-      <div style="font-size:12px; color:var(--muted); margin-bottom:14px">Set the % commission sent to the referrer when an invited user upgrades</div>
-      <div id="commissions-settings-list"></div>
-      <button class="btn btn-gold" style="margin-top:4px" onclick="saveCommissions()">💾 Save Settings</button>
-    </div>
-
-    <!-- PENDING PAYOUTS -->
-    <div class="card">
-      <div class="section-title">💸 Referral Commission Payouts</div>
-      <div id="admin-payouts-list">
-        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No pending payouts</div>
+    <!-- ALL USERS - أول شيء -->
+    <div class="card" style="border-color:rgba(0,170,255,0.4)">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
+        <div class="section-title" style="margin-bottom:0">👥 كل المشتركين <span id="admin-users-count" style="font-size:12px; color:var(--muted); font-weight:400"></span></div>
+        <button class="btn btn-sm" onclick="refreshFromFirebase()" style="font-size:11px; padding:6px 12px; background:linear-gradient(135deg,#00C853,#00E676); color:#003300; font-weight:700">🔄 تحديث</button>
       </div>
-    </div>
-
-    <!-- ALL USERS -->
-    <div class="card">
-      <div class="section-title">👥 All Users <span id="admin-users-count" style="font-size:12px; color:var(--muted); font-weight:400"></span></div>
       <div style="display:flex; gap:8px; margin-bottom:10px">
-        <input type="number" class="search-input" id="admin-search-id" placeholder="🔍 ابحث بالـ ID..." oninput="renderAdminUsers()"
-          style="flex:1; background:rgba(0,136,204,0.08); border:1px solid var(--border); border-radius:10px; color:var(--text); padding:10px; font-size:13px; outline:none">
+        <input type="text" class="search-input" id="admin-search-id" placeholder="🔍 ابحث بالـ ID أو الاسم..." oninput="renderAdminUsers()"
+          style="flex:1; background:rgba(0,136,204,0.08); border:1px solid var(--border); border-radius:10px; color:var(--text); padding:10px; font-size:13px; outline:none; margin-bottom:0">
         <button class="btn btn-sm btn-outline" onclick="document.getElementById('admin-search-id').value=''; renderAdminUsers()" style="padding:8px 14px; font-size:12px">✕</button>
       </div>
       <div id="admin-users-list"></div>
@@ -1162,10 +1149,26 @@
 
     <!-- WITHDRAWAL REQUESTS -->
     <div class="card">
-      <div class="section-title">📤 Withdrawals</div>
+      <div class="section-title">📤 طلبات السحب</div>
       <div id="admin-withdrawals-list">
-        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No withdrawal requests</div>
+        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">لا توجد طلبات سحب</div>
       </div>
+    </div>
+
+    <!-- PENDING PAYOUTS -->
+    <div class="card">
+      <div class="section-title">💸 عمولات الإحالة</div>
+      <div id="admin-payouts-list">
+        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">لا توجد عمولات معلّقة</div>
+      </div>
+    </div>
+
+    <!-- COMMISSION SETTINGS -->
+    <div class="card" style="border-color:rgba(255,184,0,0.4)">
+      <div class="section-title" style="color:var(--gold)">⚙️ نسبة العمولة لكل مستوى</div>
+      <div style="font-size:12px; color:var(--muted); margin-bottom:14px">نسبة العمولة المرسلة للمحيل عند ترقية المستخدم المدعو</div>
+      <div id="commissions-settings-list"></div>
+      <button class="btn btn-gold" style="margin-top:4px" onclick="saveCommissions()">💾 حفظ الإعدادات</button>
     </div>
 
   </div>
@@ -1232,14 +1235,11 @@ function loadDb(callback) {
     const data = snapshot.val();
     if (data) {
       db = data;
-      // Ensure commissions exist
-      if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
+      if (!db.commissions) db.commissions = { 2:10,3:10,4:10,5:10,6:10,7:10,8:10,9:10,10:10 };
     }
+    if (!db.commissions) db.commissions = { 2:10,3:10,4:10,5:10,6:10,7:10,8:10,9:10,10:10 };
     callback();
-  }).catch(() => {
-    // fallback to localStorage
-    callback();
-  });
+  }).catch(() => { callback(); });
 }
 
 // ===== DATA STORE =====
@@ -1248,7 +1248,7 @@ const DEFAULT_COMMISSIONS = {
   2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 10, 10: 10
 };
 
-let db = JSON.parse(localStorage.getItem('tonneed_db') || JSON.stringify({
+let db = {
   users: [{
     id: 555497,
     name: 'Admin Root',
@@ -1268,8 +1268,8 @@ let db = JSON.parse(localStorage.getItem('tonneed_db') || JSON.stringify({
   withdrawals: [],
   payouts: [],
   nextId: 100001,
-  commissions: { ...DEFAULT_COMMISSIONS }
-}));
+  commissions: { 2:10,3:10,4:10,5:10,6:10,7:10,8:10,9:10,10:10 }
+};
 
 // Ensure commissions exist in older DB versions
 if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
@@ -2016,7 +2016,49 @@ function saveCommissions() {
   showToast('✅ Commission rates saved!');
 }
 
+
+function refreshFromFirebase() {
+  showToast('🔄 جاري تحديث البيانات...');
+  firebaseDb.ref('tonneed').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if (data) {
+      db = data;
+      if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
+      localStorage.setItem('tonneed_db', JSON.stringify(db));
+      renderAdminPanel();
+      showToast('✅ تم التحديث! المستخدمون: ' + db.users.length);
+    } else {
+      showToast('⚠️ لا توجد بيانات في Firebase');
+    }
+  }).catch(() => showToast('❌ خطأ في الاتصال'));
+}
+
 function renderAdminPanel() {
+  // اعرض رسالة تحميل
+  const list = document.getElementById('admin-users-list');
+  if (list) list.innerHTML = '<div style="text-align:center; padding:30px; color:var(--muted)">⏳ جاري تحميل البيانات...</div>';
+
+  // جلب من Firebase مباشرة
+  firebaseDb.ref('tonneed').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if (data) {
+      db = data;
+      if (!db.commissions) db.commissions = { 2:10,3:10,4:10,5:10,6:10,7:10,8:10,9:10,10:10 };
+    }
+    _doRenderAdmin();
+  }).catch(() => _doRenderAdmin());
+}
+
+function _doRenderAdmin() {
+  document.getElementById('admin-total-users').textContent = db.users.length;
+  document.getElementById('admin-pending-w').textContent = (db.withdrawals||[]).filter(w => w.status === 'pending').length;
+  renderCommissionsSettings();
+  renderAdminPayouts();
+  renderAdminUsers();
+  renderAdminWithdrawals();
+}
+
+function _doRenderAdmin() {
   document.getElementById('admin-total-users').textContent = db.users.length;
   document.getElementById('admin-pending-w').textContent = db.withdrawals.filter(w => w.status === 'pending').length;
   renderCommissionsSettings();
