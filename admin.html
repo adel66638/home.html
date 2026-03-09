@@ -2422,8 +2422,6 @@ window.addEventListener('load', () => {
     }, { passive: false });
   }
 
-  // مسح البيانات القديمة من localStorage
-  localStorage.removeItem('tonneed_db');
   loadDb(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const ref = urlParams.get('ref');
