@@ -2217,7 +2217,7 @@ function renderAdminUsers() {
       </div>
       <div style="display:flex; gap:8px; margin-top:4px">
         <button class="btn btn-sm btn-outline" onclick="showUserTree(${u.id})" style="flex:1; font-size:12px">🌳 View Tree</button>
-        <button class="btn btn-sm" onclick="resetUserBalance(${u.id})" style="flex:1; font-size:12px; background:rgba(255,68,68,0.15); border:1px solid rgba(255,68,68,0.4); color:#FF4444; border-radius:8px; cursor:pointer; padding:8px">🔴 تصفير الرصيد</button>
+        <button onclick="resetUserBalance(${u.id})" style="flex:1; font-size:12px; background:rgba(255,68,68,0.15); border:1px solid rgba(255,68,68,0.4); color:#FF4444; border-radius:8px; cursor:pointer; padding:8px; font-family:'Inter',sans-serif">🔴 تصفير الرصيد</button>
       </div>
     </div>
   `).join('');
@@ -2226,7 +2226,7 @@ function renderAdminUsers() {
 function resetUserBalance(userId) {
   const user = db.users.find(u => u.id === userId);
   if (!user) return;
-  if (!confirm(`⚠️ هل أنت متأكد من تصفير رصيد المستخدم "${user.name}" (ID: ${userId})؟\nالرصيد الحالي: ${user.balance.toFixed(4)} TON`)) return;
+  if (!confirm('⚠️ هل أنت متأكد من تصفير رصيد ' + user.name + ' (ID: ' + userId + ')?\nالرصيد الحالي: ' + user.balance.toFixed(4) + ' TON')) return;
   user.balance = 0;
   saveDb();
   renderAdminUsers();
