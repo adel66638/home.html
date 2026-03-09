@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TonNeed - Admin</title>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; background:#040D1A; color:#E8F4FF; min-height:100vh; }
+  .header { background:rgba(4,13,26,0.95); border-bottom:1px solid rgba(0,136,204,0.3); padding:14px 20px; display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; z-index:100; }
+  .logo { font-size:20px; font-weight:900; color:#00AAFF; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:16px; }
+  .stat-box { background:rgba(0,136,204,0.1); border:1px solid rgba(0,136,204,0.3); border-radius:12px; padding:16px; text-align:center; }
+  .stat-num { font-size:32px; font-weight:900; color:#00AAFF; }
+  .stat-label { font-size:12px; color:rgba(232,244,255,0.5); margin-top:4px; }
+  .container { padding:0 16px 100px; }
+  .search-box { width:100%; background:rgba(0,0,0,0.3); border:1px solid rgba(0,136,204,0.3); border-radius:10px; padding:12px 14px; color:#E8F4FF; font-size:14px; outline:none; margin-bottom:12px; }
+  .search-box:focus { border-color:#00AAFF; }
+  .user-card { background:rgba(0,136,204,0.06); border:1px solid rgba(0,136,204,0.2); border-radius:12px; padding:14px; margin-bottom:12px; }
+  .user-id { font-size:20px; font-weight:900; color:#00AAFF; font-family:monospace; }
+  .user-name { font-size:15px; font-weight:700; margin:6px 0; }
+  .wallet-box { background:rgba(0,0,0,0.3); border:1px solid rgba(0,136,204,0.2); border-radius:8px; padding:10px; margin:8px 0; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .wallet-text { font-size:10px; font-family:monospace; color:#00AAFF; word-break:break-all; flex:1; }
+  .copy-btn { background:#0088CC; border:none; color:white; padding:6px 12px; border-radius:6px; font-size:11px; cursor:pointer; white-space:nowrap; }
+  .copy-btn:hover { background:#00AAFF; }
+  .grid4 { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0; }
+  .info-box { background:rgba(0,0,0,0.2); border-radius:8px; padding:10px; text-align:center; }
+  .info-val { font-size:14px; font-weight:700; color:#00E676; font-family:monospace; }
+  .info-val.gold { color:#FFB800; }
+  .info-val.blue { color:#00AAFF; }
+  .info-val.white { color:#E8F4FF; font-size:12px; }
+  .info-label { font-size:10px; color:rgba(232,244,255,0.5); margin-bottom:3px; }
+  .upline-box { font-size:11px; color:rgba(232,244,255,0.5); padding:6px 10px; background:rgba(0,0,0,0.15); border-radius:6px; margin-top:6px; }
+  .level-badge { background:rgba(0,85,136,0.5); border:1px solid #0088CC; border-radius:10px; padding:3px 10px; font-size:11px; color:#00AAFF; }
+  .refresh-btn { background:linear-gradient(135deg,#00C853,#00E676); color:#003300; border:none; padding:8px 16px; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
+  .loading { text-align:center; padding:40px; color:rgba(232,244,255,0.5); font-size:14px; }
+  .section-title { font-size:14px; font-weight:700; color:#00AAFF; margin:16px 0 10px; }
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:rgba(0,136,204,0.9); color:white; padding:10px 20px; border-radius:20px; font-size:13px; display:none; z-index:999; }
+  .withdrawal-card { background:rgba(255,184,0,0.06); border:1px solid rgba(255,184,0,0.2); border-radius:12px; padding:14px; margin-bottom:10px; }
+  .btn-confirm { background:linear-gradient(135deg,#0088CC,#00AAFF); color:white; border:none; padding:8px 16px; border-radius:8px; font-size:12px; cursor:pointer; margin-left:8px; }
+  .btn-reject { background:linear-gradient(135deg,#8B0000,#FF4444); color:white; border:none; padding:8px 16px; border-radius:8px; font-size:12px; cursor:pointer; }
+  .tabs { display:flex; gap:8px; padding:12px 16px; border-bottom:1px solid rgba(0,136,204,0.2); }
+  .tab { flex:1; padding:10px; border:none; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; background:rgba(0,136,204,0.1); color:rgba(232,244,255,0.5); }
+  .tab.active { background:rgba(0,136,204,0.3); color:#00AAFF; border:1px solid rgba(0,136,204,0.4); }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <span class="logo">🔐 Admin TonNeed</span>
+  <button class="refresh-btn" onclick="loadData()">🔄 تحديث</button>
+</div>
+
+<div class="stats">
+  <div class="stat-box">
+    <div class="stat-num" id="total-users">-</div>
+    <div class="stat-label">👥 المشتركون</div>
+  </div>
+  <div class="stat-box">
+    <div class="stat-num" id="total-withdrawals">-</div>
+    <div class="stat-label">💸 السحوبات المعلّقة</div>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab('users', this)">👥 المشتركون</button>
+  <button class="tab" onclick="switchTab('withdrawals', this)">💸 السحوبات</button>
+</div>
+
+<div class="container">
+
+  <!-- تاب المشتركين -->
+  <div id="tab-users" class="tab-content active">
+    <input type="text" class="search-box" id="search" placeholder="🔍 ابحث بالـ ID أو الاسم أو المحفظة..." oninput="filterUsers()">
+    <div id="users-list"><div class="loading">⏳ جاري تحميل البيانات...</div></div>
+  </div>
+
+  <!-- تاب السحوبات -->
+  <div id="tab-withdrawals" class="tab-content">
+    <div id="withdrawals-list"><div class="loading">⏳ جاري التحميل...</div></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyAsNRuN09FLendzP60yBaiw7hV3Toex0D0",
+  authDomain: "tonminer-87923.firebaseapp.com",
+  databaseURL: "https://tonminer-87923-default-rtdb.firebaseio.com",
+  projectId: "tonminer-87923",
+  storageBucket: "tonminer-87923.firebasestorage.app",
+  messagingSenderId: "736875130208",
+  appId: "1:736875130208:web:5741503e947609f09bc205"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let allUsers = [];
+let allWithdrawals = [];
+let allPayouts = [];
+
+const LEVELS = [
+  {name:'Free'}, {name:'Beginner'}, {name:'Trainee'}, {name:'Intermediate'},
+  {name:'Advanced'}, {name:'Professional'}, {name:'Expert'},
+  {name:'Master'}, {name:'Elite'}, {name:'Legend'}, {name:'Grand Master'}
+];
+const ICONS = ['🏅','🥈','🥇','💎','🔥','⚡','🌟','👑','🚀','🏆'];
+
+function getLevelIcon(l) { return ICONS[l-1] || '🏅'; }
+function getLevelName(l) { return (LEVELS[l] || LEVELS[0]).name; }
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
+}
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+function loadData() {
+  showToast('🔄 جاري التحميل...');
+  document.getElementById('users-list').innerHTML = '<div class="loading">⏳ جاري تحميل البيانات...</div>';
+
+  db.ref('tonneed').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if (!data) {
+      document.getElementById('users-list').innerHTML = '<div class="loading">❌ لا توجد بيانات</div>';
+      return;
+    }
+
+    allUsers = data.users || [];
+    allWithdrawals = data.withdrawals || [];
+    allPayouts = data.payouts || [];
+
+    document.getElementById('total-users').textContent = allUsers.length;
+    document.getElementById('total-withdrawals').textContent = allWithdrawals.filter(w => w.status === 'pending').length;
+
+    renderUsers(allUsers);
+    renderWithdrawals();
+    showToast('✅ تم التحميل! ' + allUsers.length + ' مشترك');
+  }).catch(err => {
+    document.getElementById('users-list').innerHTML = '<div class="loading">❌ خطأ في الاتصال: ' + err.message + '</div>';
+    showToast('❌ خطأ في الاتصال');
+  });
+}
+
+function filterUsers() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  if (!q) { renderUsers(allUsers); return; }
+  const filtered = allUsers.filter(u =>
+    String(u.id).includes(q) ||
+    (u.name||'').toLowerCase().includes(q) ||
+    (u.wallet||'').toLowerCase().includes(q)
+  );
+  renderUsers(filtered);
+}
+
+function renderUsers(users) {
+  const list = document.getElementById('users-list');
+  if (!users.length) {
+    list.innerHTML = '<div class="loading">❌ لا يوجد مشترك</div>';
+    return;
+  }
+
+  list.innerHTML = users.map(u => {
+    const joinDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-EG') : '---';
+    const days = u.createdAt ? Math.floor((Date.now() - u.createdAt) / 86400000) : 0;
+    const upline = allUsers.find(x => x.id === u.uplineId);
+    const walletSafe = (u.wallet||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");
+
+    return `<div class="user-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span class="user-id">🆔 ${u.id}</span>
+        <span class="level-badge">${getLevelIcon(u.level)} Lv${u.level} ${getLevelName(u.level)}</span>
+      </div>
+      <div class="user-name">👤 ${u.name || '---'}</div>
+      <div class="wallet-box">
+        <span class="wallet-text">👛 ${u.wallet || '---'}</span>
+        <button class="copy-btn" onclick="navigator.clipboard.writeText('${walletSafe}').then(()=>showToast('✅ تم نسخ المحفظة!'))">نسخ</button>
+      </div>
+      <div class="grid4">
+        <div class="info-box">
+          <div class="info-label">💰 الرصيد</div>
+          <div class="info-val">${(u.balance||0).toFixed(4)}</div>
+          <div style="font-size:9px;color:rgba(232,244,255,0.4)">TON</div>
+        </div>
+        <div class="info-box">
+          <div class="info-label">👥 المحالون</div>
+          <div class="info-val gold">${(u.referrals||[]).length}</div>
+          <div style="font-size:9px;color:rgba(232,244,255,0.4)">مستخدم</div>
+        </div>
+        <div class="info-box">
+          <div class="info-label">💸 المسحوب</div>
+          <div class="info-val blue">${(u.totalWithdrawn||0).toFixed(4)}</div>
+          <div style="font-size:9px;color:rgba(232,244,255,0.4)">TON</div>
+        </div>
+        <div class="info-box">
+          <div class="info-label">📅 الانضمام</div>
+          <div class="info-val white">${joinDate}</div>
+          <div style="font-size:9px;color:rgba(232,244,255,0.4)">${days} يوم</div>
+        </div>
+      </div>
+      <div class="upline-box">
+        🔗 المحيل: <strong style="color:#00AAFF">${u.uplineId || 'لا يوجد'}</strong>
+        ${upline ? ' — ' + upline.name : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderWithdrawals() {
+  const list = document.getElementById('withdrawals-list');
+  if (!allWithdrawals.length) {
+    list.innerHTML = '<div class="loading">لا توجد سحوبات</div>';
+    return;
+  }
+  const sorted = [...allWithdrawals].reverse();
+  list.innerHTML = sorted.map(w => `
+    <div class="withdrawal-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <div>
+          <div style="font-weight:700;font-size:14px">${w.userName}</div>
+          <div style="font-size:11px;color:rgba(232,244,255,0.5)">ID: ${w.userId} • ${new Date(w.date).toLocaleDateString('ar-EG')}</div>
+        </div>
+        <span style="padding:3px 10px;border-radius:8px;font-size:11px;font-weight:700;${w.status==='pending'?'background:rgba(255,184,0,0.15);color:#FFB800;border:1px solid rgba(255,184,0,0.3)':'background:rgba(0,230,118,0.15);color:#00E676;border:1px solid rgba(0,230,118,0.3)'}">
+          ${w.status==='pending'?'معلّق':'مكتمل'}
+        </span>
+      </div>
+      <div style="font-size:16px;font-weight:900;color:#00AAFF;font-family:monospace;margin-bottom:6px">${(w.amount||0).toFixed(4)} TON</div>
+      <div style="font-size:10px;color:rgba(232,244,255,0.5);margin-bottom:8px;word-break:break-all">${w.wallet}</div>
+      ${w.status==='pending'?`<div>
+        <button class="btn-confirm" onclick="approveW(${w.id})">✅ تأكيد</button>
+        <button class="btn-reject" onclick="rejectW(${w.id})">❌ رفض</button>
+      </div>`:''}
+    </div>
+  `).join('');
+}
+
+function approveW(wId) {
+  db.ref('tonneed').once('value').then(snap => {
+    const data = snap.val();
+    const w = (data.withdrawals||[]).find(x=>x.id===wId);
+    if (!w) return;
+    w.status = 'done';
+    const user = (data.users||[]).find(u=>u.id===w.userId);
+    if (user) {
+      user.balance = parseFloat((user.balance - w.amount).toFixed(4));
+      if (user.balance < 0) user.balance = 0;
+      user.totalWithdrawn = (user.totalWithdrawn||0) + w.amount;
+    }
+    return db.ref('tonneed').set(data);
+  }).then(() => { loadData(); showToast('✅ تم تأكيد السحب'); });
+}
+
+function rejectW(wId) {
+  db.ref('tonneed').once('value').then(snap => {
+    const data = snap.val();
+    const w = (data.withdrawals||[]).find(x=>x.id===wId);
+    if (!w) return;
+    const user = (data.users||[]).find(u=>u.id===w.userId);
+    if (user) user.balance = (user.balance||0) + w.amount;
+    data.withdrawals = (data.withdrawals||[]).filter(x=>x.id!==wId);
+    return db.ref('tonneed').set(data);
+  }).then(() => { loadData(); showToast('❌ تم رفض السحب وإعادة الرصيد'); });
+}
+
+// تحميل تلقائي عند فتح الصفحة
+window.onload = loadData;
+</script>
+</body>
+</html>
