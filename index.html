@@ -2192,33 +2192,59 @@ function renderAdminUsers() {
 
   list.innerHTML = filtered.map(u => `
     <div style="background:rgba(0,136,204,0.06); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px">
+      
+      <!-- Header: ID + Level -->
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
         <div style="font-family:'Orbitron',monospace; font-size:16px; font-weight:900; color:var(--ton-light)">ID: ${u.id}</div>
         <span class="ref-level-badge" style="font-size:12px; padding:4px 12px">${getLevelIcon(u.level)} Lv${u.level} — ${(LEVELS[u.level-1]||LEVELS[0]).name}</span>
       </div>
+
+      <!-- Name -->
       <div style="font-size:14px; font-weight:700; margin-bottom:6px">👤 ${u.name}</div>
+
+      <!-- Email -->
+      <div style="font-size:12px; color:var(--muted); margin-bottom:6px">📧 ${u.email || '—'}</div>
+
+      <!-- Telegram -->
+      <div style="font-size:12px; color:var(--muted); margin-bottom:8px">📱 Telegram ID: ${u.telegramId || '—'}</div>
+
+      <!-- Wallet -->
       <div style="font-size:10px; font-family:'Orbitron',monospace; color:var(--ton-light); background:rgba(0,0,0,0.3); border-radius:8px; padding:8px; word-break:break-all; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px">
         <span style="flex:1">👛 ${u.wallet}</span>
-        <button class="copy-btn" style="font-size:10px; padding:4px 8px; flex-shrink:0" onclick="navigator.clipboard.writeText('${u.wallet.replace(/'/g,"\'")}').then(()=>showToast('✅ Copied!'))">Copy</button>
+        <button class="copy-btn" style="font-size:10px; padding:4px 8px; flex-shrink:0" onclick="navigator.clipboard.writeText('${u.wallet.replace(/'/g,"\'")}').then(()=>showToast('✅ Copied!'))">نسخ</button>
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px">
+
+      <!-- Stats Grid -->
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px">
         <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">Balance</div>
-          <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--green); font-weight:700">${u.balance.toFixed(4)}</div>
+          <div style="font-size:10px; color:var(--muted)">💰 الرصيد</div>
+          <div style="font-family:'Orbitron',monospace; font-size:14px; color:var(--green); font-weight:700">${u.balance.toFixed(4)} TON</div>
         </div>
         <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">Referrals</div>
-          <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--gold); font-weight:700">${u.referrals.length}</div>
+          <div style="font-size:10px; color:var(--muted)">🚀 المسحوب</div>
+          <div style="font-family:'Orbitron',monospace; font-size:14px; color:var(--ton-light); font-weight:700">${(u.totalWithdrawn||0).toFixed(4)} TON</div>
         </div>
         <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">Withdrawn</div>
-          <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--ton-light); font-weight:700">${(u.totalWithdrawn||0).toFixed(4)}</div>
+          <div style="font-size:10px; color:var(--muted)">👥 المحالون</div>
+          <div style="font-family:'Orbitron',monospace; font-size:14px; color:var(--gold); font-weight:700">${u.referrals.length}</div>
+        </div>
+        <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
+          <div style="font-size:10px; color:var(--muted)">📅 الانضمام</div>
+          <div style="font-size:12px; color:var(--text); font-weight:600">${u.joinDate ? new Date(u.joinDate).toLocaleDateString('ar') : '—'}</div>
         </div>
       </div>
-      <div style="display:flex; gap:8px; margin-top:4px">
-        <button class="btn btn-sm btn-outline" onclick="showUserTree(${u.id})" style="flex:1; font-size:12px">🌳 View Tree</button>
-        <button onclick="resetUserBalance(${u.id})" style="flex:1; font-size:12px; background:rgba(255,68,68,0.15); border:1px solid rgba(255,68,68,0.4); color:#FF4444; border-radius:8px; cursor:pointer; padding:8px; font-family:'Inter',sans-serif">🔴 تصفير الرصيد</button>
+
+      <!-- Referrer -->
+      <div style="font-size:12px; color:var(--muted); margin-bottom:10px">
+        🔗 المحيل: ${u.referredBy ? '<span style="color:var(--ton-light)">' + u.referredBy + '</span>' : '—'}
       </div>
+
+      <!-- Buttons -->
+      <div style="display:flex; gap:8px">
+        <button class="btn btn-sm btn-outline" onclick="showUserTree(${u.id})" style="flex:1; font-size:12px">🌳 الشجرة</button>
+        <button onclick="resetUserBalance(${u.id})" style="flex:1; font-size:12px; background:rgba(255,68,68,0.15); border:1px solid rgba(255,68,68,0.4); color:#FF4444; border-radius:8px; cursor:pointer; padding:8px; font-family:'Inter',sans-serif; font-weight:700">🔴 تصفير الرصيد</button>
+      </div>
+
     </div>
   `).join('');
 }
@@ -2226,7 +2252,7 @@ function renderAdminUsers() {
 function resetUserBalance(userId) {
   const user = db.users.find(u => u.id === userId);
   if (!user) return;
-  if (!confirm('⚠️ هل أنت متأكد من تصفير رصيد ' + user.name + ' (ID: ' + userId + ')?\nالرصيد الحالي: ' + user.balance.toFixed(4) + ' TON')) return;
+  if (!confirm('⚠️ هل أنت متأكد من تصفير رصيد ' + user.name + '?\nالرصيد الحالي: ' + user.balance.toFixed(4) + ' TON')) return;
   user.balance = 0;
   saveDb();
   renderAdminUsers();
