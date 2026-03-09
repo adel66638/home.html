@@ -2102,7 +2102,7 @@ function activateUpgrade(payoutId) {
 function renderAdminUsers() {
   const q = (document.getElementById('admin-search-id').value || '').trim();
   const filtered = q
-    ? db.users.filter(u => String(u.id).includes(q))
+    ? db.users.filter(u => String(u.id).includes(q) || (u.name||'').toLowerCase().includes(q.toLowerCase()))
     : db.users;
 
   const countEl = document.getElementById('admin-users-count');
@@ -2111,39 +2111,63 @@ function renderAdminUsers() {
   const list = document.getElementById('admin-users-list');
 
   if (!filtered.length) {
-    list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">❌ No user found with this ID</div>';
+    list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">❌ لا يوجد مستخدم بهذا الـ ID</div>';
     return;
   }
 
-  list.innerHTML = filtered.map(u => `
-    <div style="background:rgba(0,136,204,0.06); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-        <div style="font-family:'Orbitron',monospace; font-size:16px; font-weight:900; color:var(--ton-light)">ID: ${u.id}</div>
-        <span class="ref-level-badge" style="font-size:12px; padding:4px 12px">${getLevelIcon(u.level)} Lv${u.level} — ${(LEVELS[u.level-1]||LEVELS[0]).name}</span>
+  list.innerHTML = filtered.map(u => {
+    const joinDate = u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar-EG') : '---';
+    const daysSince = u.createdAt ? Math.floor((Date.now() - u.createdAt) / (1000*60*60*24)) : 0;
+    const walletEsc = (u.wallet||'').replace(/'/g, "\'");
+    const uplineUser = db.users.find(x => x.id === u.uplineId);
+    return `
+    <div style="background:rgba(0,136,204,0.06); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:12px">
+      
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+        <div style="font-family:'Orbitron',monospace; font-size:18px; font-weight:900; color:var(--ton-light)">🆔 ${u.id}</div>
+        <span class="ref-level-badge" style="font-size:11px; padding:4px 10px">${getLevelIcon(u.level)} Lv${u.level} — ${(LEVELS[u.level-1]||LEVELS[0]).name}</span>
       </div>
-      <div style="font-size:14px; font-weight:700; margin-bottom:6px">👤 ${u.name}</div>
-      <div style="font-size:10px; font-family:'Orbitron',monospace; color:var(--ton-light); background:rgba(0,0,0,0.3); border-radius:8px; padding:8px; word-break:break-all; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px">
-        <span style="flex:1">👛 ${u.wallet}</span>
-        <button class="copy-btn" style="font-size:10px; padding:4px 8px; flex-shrink:0" onclick="navigator.clipboard.writeText('${u.wallet.replace(/'/g,"\'")}').then(()=>showToast('✅ Copied!'))">Copy</button>
+
+      <div style="font-size:14px; font-weight:700; margin-bottom:8px; color:var(--text)">👤 ${u.name}</div>
+
+      <div style="background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px; padding:8px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px">
+        <span style="font-size:10px; font-family:'Orbitron',monospace; color:var(--ton-light); word-break:break-all; flex:1">👛 ${u.wallet}</span>
+        <button class="copy-btn" style="font-size:10px; padding:4px 8px; flex-shrink:0" onclick="navigator.clipboard.writeText('${walletEsc}').then(()=>showToast('✅ تم النسخ!'))">نسخ</button>
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:8px">
+
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px">
         <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">Balance</div>
+          <div style="font-size:10px; color:var(--muted); margin-bottom:2px">💰 الرصيد</div>
           <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--green); font-weight:700">${u.balance.toFixed(4)}</div>
+          <div style="font-size:9px; color:var(--muted)">TON</div>
         </div>
         <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">Referrals</div>
+          <div style="font-size:10px; color:var(--muted); margin-bottom:2px">👥 المحالون</div>
           <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--gold); font-weight:700">${u.referrals.length}</div>
+          <div style="font-size:9px; color:var(--muted)">مستخدم</div>
         </div>
         <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">Withdrawn</div>
+          <div style="font-size:10px; color:var(--muted); margin-bottom:2px">💸 المسحوب</div>
           <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--ton-light); font-weight:700">${(u.totalWithdrawn||0).toFixed(4)}</div>
+          <div style="font-size:9px; color:var(--muted)">TON</div>
+        </div>
+        <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
+          <div style="font-size:10px; color:var(--muted); margin-bottom:2px">📅 تاريخ الانضمام</div>
+          <div style="font-size:12px; color:var(--text); font-weight:700">${joinDate}</div>
+          <div style="font-size:9px; color:var(--muted)">${daysSince} يوم</div>
         </div>
       </div>
-      <button class="btn btn-sm btn-outline" onclick="showUserTree(${u.id})" style="width:100%; font-size:12px">🌳 View Tree</button>
+
+      <div style="font-size:11px; color:var(--muted); padding:6px 10px; background:rgba(0,0,0,0.15); border-radius:6px; margin-bottom:8px">
+        🔗 المحيل: <span style="color:var(--ton-light); font-weight:700">${u.uplineId || 'لا يوجد'}</span>
+        ${uplineUser ? ' — ' + uplineUser.name : ''}
+      </div>
+
+      <button class="btn btn-sm btn-outline" onclick="showUserTree(${u.id})" style="width:100%; font-size:12px">🌳 عرض الشجرة</button>
     </div>
-  `).join('');
+  `;}).join('');
 }
+
 
 function showUserTree(userId) {
   const user = db.users.find(u => u.id === userId);
