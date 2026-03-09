@@ -752,7 +752,7 @@
       <div class="auth-switch">
         Don't have an account? <a onclick="showRegister()">Register Now</a>
         <br><br>
-        <a onclick="showAdminLogin()" style="color:var(--muted); font-size:11px">Admin Login 🔐</a>
+        
       </div>
     </div>
 
@@ -783,7 +783,7 @@
       </div>
     </div>
 
-    <!-- ADMIN LOGIN -->
+    <!-- ADMIN LOGIN (hidden - use ?admin=true URL) -->
     <div id="admin-login-form" style="width:100%; display:none">
       <div class="card" style="padding:24px; border-color: var(--gold)">
         <h2 style="text-align:center; margin-bottom:20px; font-size:18px; color:var(--gold)">🔐 Admin Panel</h2>
@@ -795,6 +795,23 @@
 </div>
 
 <!-- ===== MAIN APP ===== -->
+
+<!-- ===== ADMIN AUTH SCREEN ===== -->
+<div id="screen-admin-auth" class="screen">
+  <div class="auth-screen">
+    <div class="auth-logo" style="font-size:30px">🔐 Admin</div>
+    <div class="auth-tagline">TonNeed Admin Panel</div>
+    <div class="card" style="padding:24px; border-color:var(--gold); width:100%">
+      <h2 style="text-align:center; margin-bottom:20px; font-size:18px; color:var(--gold)">Admin Login</h2>
+      <div class="input-group">
+        <label class="input-label">🔑 Admin Password</label>
+        <input type="password" class="input-field" id="admin-auth-pass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter') doAdminAuth()">
+      </div>
+      <button class="btn btn-gold" style="margin-top:8px" onclick="doAdminAuth()">🔐 Enter Panel</button>
+    </div>
+  </div>
+</div>
+
 <div id="screen-app" class="screen">
   <!-- HEADER -->
   <div class="header">
@@ -1437,8 +1454,21 @@ function doLogin() {
 }
 
 function doAdminLogin() {
-  showScreen('admin');
-  renderAdminPanel();
+  // قديمة - محولة للشاشة الجديدة
+  showScreen('admin-auth');
+}
+
+function doAdminAuth() {
+  const pass = document.getElementById('admin-auth-pass').value;
+  if (pass === ADMIN_PASS) {
+    loadDb(() => {
+      showScreen('admin');
+      renderAdminPanel();
+    });
+  } else {
+    showToast('❌ Wrong password');
+    document.getElementById('admin-auth-pass').value = '';
+  }
 }
 
 function loginUser(user) {
@@ -2161,7 +2191,7 @@ function rejectWithdrawal(wId) {
   }
 }
 
-function logoutAdmin() { showScreen('auth'); showLogin(); }
+function logoutAdmin() { window.location.href = window.location.pathname + '?admin=true'; }
 
 // ===== UTILS =====
 function copyRef() {
@@ -2194,8 +2224,10 @@ window.addEventListener('load', () => {
     const ref = urlParams.get('ref');
     const admin = urlParams.get('admin');
     if (admin === 'true') {
-      showScreen('admin');
-      renderAdminPanel();
+      loadDb(() => {
+        showScreen('admin');
+        renderAdminPanel();
+      });
       return;
     }
     if (ref) {
