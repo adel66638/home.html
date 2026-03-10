@@ -237,12 +237,46 @@ function findKey(ref, matchFn) {
 }
 
 function resetBalance(userId, userName, currentBalance) {
-  if (!confirm('⚠️ تصفير رصيد ' + userName + '?\nالرصيد الحالي: ' + currentBalance.toFixed(4) + ' TON')) return;
+  if (currentBalance <= 0) { showToast('⚠️ الرصيد فارغ بالفعل'); return; }
+  if (!confirm('⚠️ تصفير رصيد ' + userName + '?\nالرصيد الحالي: ' + currentBalance.toFixed(4) + ' TON\n\nسيتم إنشاء سحب معلق تلقائياً')) return;
+
   findKey('tonneed/users', u => u && u.id === userId).then(key => {
     if (key === null) { showToast('❌ لم يتم العثور على المستخدم'); return; }
-    fdb.ref('tonneed/users/' + key + '/balance').set(0).then(() => {
-      showToast('✅ تم تصفير الرصيد بنجاح');
-      loadAll();
+
+    fdb.ref('tonneed/users/' + key).once('value').then(snap => {
+      const user = snap.val();
+
+      const withdrawal = {
+        id: Date.now(),
+        userId: userId,
+        userName: userName,
+        wallet: user.wallet || '—',
+        amount: currentBalance,
+        date: new Date().toISOString(),
+        status: 'pending'
+      };
+
+      fdb.ref('tonneed/withdrawals').once('value').then(wSnap => {
+        const existing = wSnap.val();
+        let withdrawals = [];
+        if (existing) {
+          withdrawals = Array.isArray(existing)
+            ? existing.filter(w => w != null)
+            : Object.values(existing).filter(w => w != null);
+        }
+        withdrawals.push(withdrawal);
+
+        Promise.all([
+          fdb.ref('tonneed/withdrawals').set(withdrawals),
+          fdb.ref('tonneed/users/' + key + '/balance').set(0),
+          fdb.ref('tonneed/users/' + key + '/totalWithdrawn').set(
+            parseFloat(((user.totalWithdrawn || 0) + currentBalance).toFixed(4))
+          )
+        ]).then(() => {
+          showToast('✅ تم التصفير وإضافة سحب معلق 🚀');
+          loadAll();
+        });
+      });
     });
   });
 }
