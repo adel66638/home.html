@@ -1226,12 +1226,19 @@ function loadDb(callback) {
     const data = snapshot.val();
     if (data) {
       db = data;
-      // Ensure commissions exist
+      // Convert users array if needed
+      if (Array.isArray(db.users)) {
+        db.users = db.users.filter(u => u !== null && u !== undefined);
+      } else if (db.users && typeof db.users === 'object') {
+        db.users = Object.values(db.users).filter(u => u !== null && u !== undefined);
+      }
+      if (!db.users) db.users = [];
+      if (!db.withdrawals) db.withdrawals = [];
+      if (!db.payouts) db.payouts = [];
       if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
     }
     callback();
   }).catch(() => {
-    // fallback to localStorage
     callback();
   });
 }
@@ -2096,17 +2103,23 @@ function renderAdminPanel() {
     const data = snapshot.val();
     if (data) {
       db = data;
+      if (Array.isArray(db.users)) {
+        db.users = db.users.filter(u => u !== null && u !== undefined);
+      } else if (db.users && typeof db.users === 'object') {
+        db.users = Object.values(db.users).filter(u => u !== null && u !== undefined);
+      }
+      if (!db.users) db.users = [];
+      if (!db.withdrawals) db.withdrawals = [];
+      if (!db.payouts) db.payouts = [];
       if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
     }
     document.getElementById('admin-total-users').textContent = db.users.length;
-    document.getElementById('admin-pending-w').textContent = db.withdrawals.filter(w => w.status === 'pending').length;
+    document.getElementById('admin-pending-w').textContent = db.withdrawals ? (Array.isArray(db.withdrawals) ? db.withdrawals : Object.values(db.withdrawals)).filter(w => w && w.status === 'pending').length : 0;
     renderCommissionsSettings();
     renderAdminPayouts();
     renderAdminUsers();
     renderAdminWithdrawals();
   }).catch(() => {
-    document.getElementById('admin-total-users').textContent = db.users.length;
-    document.getElementById('admin-pending-w').textContent = db.withdrawals.filter(w => w.status === 'pending').length;
     renderCommissionsSettings();
     renderAdminPayouts();
     renderAdminUsers();
