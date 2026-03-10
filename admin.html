@@ -1,2459 +1,293 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<meta name="format-detection" content="telephone=no">
-<title>TonNeed - Mining Platform</title>
-<style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&family=Orbitron:wght@400;700;900&display=swap');
-
-  :root {
-    --ton: #0088CC;
-    --ton-light: #00AAFF;
-    --ton-dark: #005588;
-    --gold: #FFB800;
-    --gold-light: #FFD700;
-    --bg: #040D1A;
-    --bg2: #071628;
-    --bg3: #0A1F35;
-    --card: rgba(0,136,204,0.08);
-    --border: rgba(0,136,204,0.2);
-    --text: #E8F4FF;
-    --muted: rgba(232,244,255,0.5);
-    --green: #00E676;
-    --red: #FF4444;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Inter', sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
-
-  /* BACKGROUND */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background: 
-      radial-gradient(ellipse 80% 50% at 50% -20%, rgba(0,136,204,0.15) 0%, transparent 60%),
-      radial-gradient(ellipse 40% 40% at 80% 80%, rgba(0,170,255,0.08) 0%, transparent 50%);
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  /* GRID LINES */
-  body::after {
-    content: '';
-    position: fixed;
-    inset: 0;
-    background-image: 
-      linear-gradient(rgba(0,136,204,0.03) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(0,136,204,0.03) 1px, transparent 1px);
-    background-size: 50px 50px;
-    pointer-events: none;
-    z-index: 0;
-  }
-
-  .container { max-width: 480px; margin: 0 auto; padding: 0 16px; position: relative; z-index: 1; }
-
-  /* ===== SCREENS ===== */
-  .screen { display: none; }
-  .screen.active { display: block; }
-
-  /* ===== HEADER ===== */
-  .header {
-    background: rgba(4,13,26,0.9);
-    backdrop-filter: blur(20px);
-    border-bottom: 1px solid var(--border);
-    padding: 12px 20px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-
-  .logo {
-    font-family: 'Orbitron', monospace;
-    font-size: 20px;
-    font-weight: 900;
-    background: linear-gradient(135deg, var(--ton-light), var(--gold));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    letter-spacing: 2px;
-  }
-
-  .header-id {
-    font-size: 11px;
-    color: var(--muted);
-    background: var(--card);
-    border: 1px solid var(--border);
-    padding: 4px 10px;
-    border-radius: 20px;
-  }
-
-  /* ===== NAV ===== */
-  .nav {
-    position: fixed;
-    bottom: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 480px;
-    background: rgba(4,13,26,0.95);
-    backdrop-filter: blur(20px);
-    border-top: 1px solid var(--border);
-    display: flex;
-    z-index: 100;
-    padding: 8px 0 20px;
-  }
-
-  .nav-btn {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    background: none;
-    border: none;
-    color: var(--muted);
-    font-family: 'Inter', sans-serif;
-    font-size: 10px;
-    cursor: pointer;
-    padding: 8px 4px;
-    transition: all 0.3s;
-    position: relative;
-  }
-
-  .nav-btn.active { color: var(--ton-light); }
-  .nav-btn.active::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 30px;
-    height: 2px;
-    background: var(--ton-light);
-    border-radius: 0 0 4px 4px;
-    box-shadow: 0 0 10px var(--ton-light);
-  }
-
-  .nav-icon { font-size: 22px; }
-
-  /* ===== CARDS ===== */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .card::before {
-    content: '';
-    position: absolute;
-    top: 0; left: 0; right: 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, var(--ton-light), transparent);
-    opacity: 0.5;
-  }
-
-  /* ===== HOME SCREEN ===== */
-  .mining-orb-wrap {
-    display: flex;
-    justify-content: center;
-    padding: 30px 0 20px;
-    position: relative;
-  }
-
-  .mining-orb {
-    width: 160px;
-    height: 160px;
-    border-radius: 50%;
-    background: radial-gradient(circle at 35% 35%, var(--ton-light), var(--ton-dark));
-    box-shadow: 
-      0 0 40px rgba(0,136,204,0.6),
-      0 0 80px rgba(0,136,204,0.3),
-      inset 0 0 40px rgba(0,0,0,0.3);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: relative;
-    transition: transform 0.2s;
-    animation: orbPulse 3s ease-in-out infinite;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-    user-select: none;
-    -webkit-user-select: none;
-  }
-
-  .mining-orb:active { transform: scale(0.95); }
-
-  @keyframes orbPulse {
-    0%, 100% { box-shadow: 0 0 40px rgba(0,136,204,0.6), 0 0 80px rgba(0,136,204,0.3); }
-    50% { box-shadow: 0 0 60px rgba(0,136,204,0.8), 0 0 120px rgba(0,136,204,0.4); }
-  }
-
-  .orb-ring {
-    position: absolute;
-    inset: -10px;
-    border-radius: 50%;
-    border: 2px solid rgba(0,136,204,0.3);
-    animation: ringRotate 8s linear infinite;
-  }
-
-  .orb-ring::after {
-    content: '';
-    position: absolute;
-    top: -4px; left: 50%;
-    width: 8px; height: 8px;
-    background: var(--ton-light);
-    border-radius: 50%;
-    box-shadow: 0 0 10px var(--ton-light);
-    transform: translateX(-50%);
-  }
-
-  @keyframes ringRotate { to { transform: rotate(360deg); } }
-
-  .orb-ring-2 {
-    position: absolute;
-    inset: -25px;
-    border-radius: 50%;
-    border: 1px solid rgba(0,136,204,0.15);
-    animation: ringRotate 12s linear infinite reverse;
-  }
-
-  .orb-text {
-    font-family: 'Orbitron', monospace;
-    font-size: 13px;
-    font-weight: 700;
-    color: white;
-    text-align: center;
-    text-shadow: 0 0 20px rgba(255,255,255,0.5);
-  }
-
-  .orb-sub { font-size: 9px; opacity: 0.7; margin-top: 2px; }
-
-  .mining-stats {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-    margin-bottom: 16px;
-  }
-
-  .stat-card {
-    background: rgba(0,136,204,0.08);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 14px;
-    text-align: center;
-  }
-
-  .stat-label { font-size: 11px; color: var(--muted); margin-bottom: 4px; }
-  .stat-value { font-family: 'Orbitron', monospace; font-size: 18px; font-weight: 700; color: var(--ton-light); }
-  .stat-unit { font-size: 11px; color: var(--muted); }
-
-  /* PROGRESS BAR */
-  .progress-wrap { margin: 8px 0 16px; }
-  .progress-label { display: flex; justify-content: space-between; font-size: 12px; color: var(--muted); margin-bottom: 8px; }
-  .progress-bar {
-    height: 8px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 4px;
-    overflow: hidden;
-    position: relative;
-  }
-  .progress-fill {
-    height: 100%;
-    background: linear-gradient(90deg, var(--ton), var(--ton-light));
-    border-radius: 4px;
-    transition: width 1s ease;
-    position: relative;
-    overflow: hidden;
-  }
-  .progress-fill::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
-    animation: shimmer 2s infinite;
-  }
-  @keyframes shimmer { 0% { transform: translateX(-100%); } 100% { transform: translateX(100%); } }
-
-  @keyframes dotPulse {
-    0%, 100% { opacity: 0.2; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1.2); box-shadow: 0 0 6px var(--green); }
-  }
-
-  /* LEVEL BADGE */
-  .level-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: linear-gradient(135deg, var(--ton-dark), var(--ton));
-    border: 1px solid var(--ton-light);
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 13px;
-    font-weight: 700;
-    color: white;
-    box-shadow: 0 0 15px rgba(0,136,204,0.3);
-  }
-
-  .level-badge.gold {
-    background: linear-gradient(135deg, #7A5500, var(--gold));
-    border-color: var(--gold-light);
-    box-shadow: 0 0 15px rgba(255,184,0,0.3);
-  }
-
-  /* ===== TIMER ===== */
-  .timer-display {
-    font-family: 'Orbitron', monospace;
-    font-size: 32px;
-    font-weight: 900;
-    text-align: center;
-    color: var(--ton-light);
-    text-shadow: 0 0 20px rgba(0,170,255,0.5);
-    letter-spacing: 4px;
-    margin: 10px 0;
-  }
-
-  /* ===== BTN ===== */
-  .btn {
-    width: 100%;
-    padding: 14px;
-    border: none;
-    border-radius: 12px;
-    font-family: 'Inter', sans-serif;
-    font-size: 15px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.3s;
-    position: relative;
-    overflow: hidden;
-  }
-
-  .btn-primary {
-    background: linear-gradient(135deg, var(--ton), var(--ton-light));
-    color: white;
-    box-shadow: 0 4px 20px rgba(0,136,204,0.4);
-  }
-
-  .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 25px rgba(0,136,204,0.5); }
-  .btn-primary:active { transform: translateY(0); }
-  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
-  .btn-gold {
-    background: linear-gradient(135deg, #B8860B, var(--gold));
-    color: #1A0A00;
-    box-shadow: 0 4px 20px rgba(255,184,0,0.4);
-    font-weight: 900;
-  }
-
-  .btn-outline {
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--text);
-  }
-
-  .btn-danger {
-    background: linear-gradient(135deg, #8B0000, var(--red));
-    color: white;
-  }
-
-  .btn-sm {
-    padding: 8px 16px;
-    font-size: 12px;
-    width: auto;
-    border-radius: 8px;
-  }
-
-  /* ===== REFERRAL ===== */
-  .ref-link-box {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 16px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-    margin: 12px 0;
-  }
-
-  .ref-link-text {
-    font-size: 12px;
-    color: var(--ton-light);
-    font-family: 'Orbitron', monospace;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .copy-btn {
-    background: var(--ton);
-    border: none;
-    color: white;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-family: 'Inter', sans-serif;
-    font-size: 12px;
-    cursor: pointer;
-    white-space: nowrap;
-    transition: all 0.3s;
-    flex-shrink: 0;
-  }
-
-  .copy-btn:hover { background: var(--ton-light); }
-
-  /* REFERRAL TREE */
-  .ref-item {
-    background: rgba(0,136,204,0.06);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    margin-bottom: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-  }
-
-  .ref-info { display: flex; align-items: center; gap: 10px; }
-  .ref-avatar {
-    width: 36px; height: 36px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, var(--ton-dark), var(--ton));
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700;
-  }
-
-  .ref-name { font-size: 13px; font-weight: 600; }
-  .ref-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
-  .ref-level-badge {
-    font-size: 10px;
-    background: var(--ton-dark);
-    border: 1px solid var(--ton);
-    padding: 2px 8px;
-    border-radius: 10px;
-    color: var(--ton-light);
-    font-family: 'Orbitron', monospace;
-  }
-
-  /* ===== WALLET ===== */
-  .wallet-display {
-    text-align: center;
-    padding: 20px 0;
-  }
-
-  .wallet-balance {
-    font-family: 'Orbitron', monospace;
-    font-size: 42px;
-    font-weight: 900;
-    color: var(--ton-light);
-    text-shadow: 0 0 30px rgba(0,170,255,0.4);
-  }
-
-  .wallet-unit { font-size: 18px; color: var(--muted); }
-
-  .wallet-address {
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
-    font-size: 11px;
-    font-family: 'Orbitron', monospace;
-    color: var(--ton-light);
-    word-break: break-all;
-    margin: 10px 0;
-  }
-
-  /* ===== LEVELS SCREEN ===== */
-  .level-card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 14px;
-    padding: 16px;
-    margin-bottom: 12px;
-    position: relative;
-    overflow: hidden;
-    cursor: pointer;
-    transition: all 0.3s;
-  }
-
-  .level-card.current {
-    border-color: var(--ton-light);
-    box-shadow: 0 0 20px rgba(0,136,204,0.2);
-  }
-
-  .level-card.locked { opacity: 0.5; cursor: not-allowed; }
-
-  .level-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
-  .level-num { font-family: 'Orbitron', monospace; font-size: 22px; font-weight: 900; color: var(--ton-light); }
-  .level-name { font-size: 14px; font-weight: 700; }
-  .level-price { font-size: 13px; color: var(--gold); font-weight: 700; }
-
-  .level-details { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
-  .level-detail-item { font-size: 11px; color: var(--muted); }
-  .level-detail-item strong { color: var(--text); display: block; font-size: 13px; }
-
-  /* ===== ADMIN ===== */
-  .admin-section { margin-bottom: 20px; }
-  .section-title {
-    font-size: 13px;
-    font-weight: 700;
-    color: var(--ton-light);
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-
-  .admin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
-  .admin-table th {
-    background: rgba(0,136,204,0.1);
-    padding: 8px 10px;
-    text-align: right;
-    color: var(--muted);
-    font-weight: 600;
-    border-bottom: 1px solid var(--border);
-  }
-  .admin-table td {
-    padding: 10px;
-    border-bottom: 1px solid rgba(0,136,204,0.08);
-    vertical-align: middle;
-  }
-  .admin-table tr:hover td { background: rgba(0,136,204,0.05); }
-
-  .status-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border-radius: 8px;
-    font-size: 10px;
-    font-weight: 700;
-  }
-  .status-pending { background: rgba(255,184,0,0.15); color: var(--gold); border: 1px solid rgba(255,184,0,0.3); }
-  .status-done { background: rgba(0,230,118,0.15); color: var(--green); border: 1px solid rgba(0,230,118,0.3); }
-  .status-active { background: rgba(0,136,204,0.15); color: var(--ton-light); border: 1px solid var(--border); }
-
-  /* SEARCH */
-  .search-input {
-    width: 100%;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 10px 14px;
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: 13px;
-    outline: none;
-    margin-bottom: 12px;
-  }
-  .search-input:focus { border-color: var(--ton-light); }
-  .search-input::placeholder { color: var(--muted); }
-
-  /* TOAST */
-  .toast {
-    position: fixed;
-    bottom: 90px;
-    left: 50%;
-    transform: translateX(-50%) translateY(20px);
-    background: rgba(0,136,204,0.9);
-    color: white;
-    padding: 10px 20px;
-    border-radius: 20px;
-    font-size: 13px;
-    font-weight: 600;
-    backdrop-filter: blur(10px);
-    z-index: 999;
-    opacity: 0;
-    transition: all 0.3s;
-    white-space: nowrap;
-  }
-  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* MODAL */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.8);
-    backdrop-filter: blur(5px);
-    z-index: 200;
-    align-items: flex-end;
-    justify-content: center;
-  }
-  .modal-overlay.open { display: flex; }
-
-  .modal {
-    background: var(--bg2);
-    border: 1px solid var(--border);
-    border-radius: 24px 24px 0 0;
-    padding: 24px;
-    width: 100%;
-    max-width: 480px;
-    animation: slideUp 0.3s ease;
-  }
-  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-  .modal-title { font-size: 18px; font-weight: 700; margin-bottom: 16px; text-align: center; }
-
-  /* ===== REGISTER / LOGIN ===== */
-  .auth-screen {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 30px 24px;
-    position: relative;
-    z-index: 1;
-  }
-
-  .auth-logo {
-    font-family: 'Orbitron', monospace;
-    font-size: 40px;
-    font-weight: 900;
-    background: linear-gradient(135deg, var(--ton-light), var(--gold));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    margin-bottom: 8px;
-    letter-spacing: 4px;
-  }
-
-  .auth-tagline { font-size: 14px; color: var(--muted); text-align: center; margin-bottom: 40px; }
-
-  .input-group { margin-bottom: 14px; }
-  .input-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; display: block; }
-  .input-field {
-    width: 100%;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    padding: 12px 14px;
-    color: var(--text);
-    font-family: 'Inter', sans-serif;
-    font-size: 14px;
-    outline: none;
-    transition: border-color 0.3s;
-  }
-  .input-field:focus { border-color: var(--ton-light); box-shadow: 0 0 0 3px rgba(0,136,204,0.1); }
-  .input-field::placeholder { color: var(--muted); }
-
-  .auth-switch { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
-  .auth-switch a { color: var(--ton-light); text-decoration: none; font-weight: 700; cursor: pointer; }
-
-  /* FLOATING PARTICLES */
-  .particle {
-    position: fixed;
-    width: 4px; height: 4px;
-    background: var(--ton-light);
-    border-radius: 50%;
-    pointer-events: none;
-    animation: float linear infinite;
-    opacity: 0.3;
-    z-index: 0;
-  }
-  @keyframes float {
-    0% { transform: translateY(100vh) scale(0); opacity: 0; }
-    10% { opacity: 0.3; }
-    90% { opacity: 0.3; }
-    100% { transform: translateY(-100px) scale(1); opacity: 0; }
-  }
-
-  /* DIVIDER */
-  .divider { height: 1px; background: var(--border); margin: 16px 0; }
-
-  /* INFO ROW */
-  .info-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    border-bottom: 1px solid rgba(0,136,204,0.08);
-    font-size: 13px;
-  }
-  .info-row:last-child { border-bottom: none; }
-  .info-row .label { color: var(--muted); }
-  .info-row .value { font-weight: 600; color: var(--text); }
-  .info-row .value.ton { color: var(--ton-light); font-family: 'Orbitron', monospace; font-size: 12px; }
-
-  .pb-nav { padding-bottom: 90px; }
-
-  /* Scrollbar */
-  ::-webkit-scrollbar { width: 4px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
-
-  .shimmer-text {
-    background: linear-gradient(90deg, var(--ton-light) 0%, var(--gold) 50%, var(--ton-light) 100%);
-    background-size: 200%;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    animation: textShimmer 3s linear infinite;
-  }
-  @keyframes textShimmer { 0% { background-position: 200%; } 100% { background-position: -200%; } }
-
-  .icon { display: inline-block; }
-
-  /* ANTI-CHEAT BADGE */
-  .blocked-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.95);
-    z-index: 9999;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 30px;
-    text-align: center;
-  }
-  .blocked-icon { font-size: 60px; margin-bottom: 20px; }
-  .blocked-title { font-size: 22px; font-weight: 900; color: var(--red); margin-bottom: 12px; font-family: Orbitron, monospace; }
-  .blocked-msg { font-size: 14px; color: var(--muted); line-height: 1.6; }
-</style>
-<!-- Telegram WebApp -->
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<!-- Firebase -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin TonNeed</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; background:#040D1A; color:#E8F4FF; min-height:100vh; }
+  .header { background:#071628; padding:16px 20px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid rgba(0,136,204,0.3); position:sticky; top:0; z-index:10; }
+  .header h1 { color:#00AAFF; font-size:18px; }
+  .stats { display:grid; grid-template-columns:1fr 1fr; gap:12px; padding:16px; }
+  .stat { background:rgba(0,136,204,0.1); border:1px solid rgba(0,136,204,0.2); border-radius:12px; padding:16px; text-align:center; }
+  .stat-num { font-size:28px; font-weight:bold; color:#00AAFF; }
+  .stat-label { font-size:12px; color:rgba(232,244,255,0.6); margin-top:4px; }
+  .section { padding:0 16px 16px; }
+  .user-card { background:rgba(0,136,204,0.06); border:1px solid rgba(0,136,204,0.2); border-radius:12px; padding:14px; margin-bottom:10px; }
+  .user-id { font-size:18px; font-weight:bold; color:#00AAFF; margin-bottom:4px; }
+  .user-name { font-size:14px; font-weight:bold; margin-bottom:4px; }
+  .user-info { font-size:12px; color:rgba(232,244,255,0.6); margin-bottom:4px; }
+  .user-wallet { font-size:10px; color:#00AAFF; background:rgba(0,0,0,0.3); border-radius:8px; padding:8px; word-break:break-all; margin:8px 0; }
+  .stats-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:8px 0; }
+  .stat-box { background:rgba(0,0,0,0.2); border-radius:8px; padding:8px; text-align:center; }
+  .stat-box-label { font-size:10px; color:rgba(232,244,255,0.6); }
+  .stat-box-val { font-size:14px; font-weight:bold; margin-top:2px; }
+  .btn-reset { width:100%; background:rgba(255,68,68,0.15); border:1px solid rgba(255,68,68,0.4); color:#FF4444; border-radius:8px; padding:10px; font-size:13px; font-weight:bold; cursor:pointer; margin-top:8px; }
+  .loading { text-align:center; padding:40px; color:rgba(232,244,255,0.5); }
+  .search-box { width:100%; background:rgba(0,136,204,0.08); border:1px solid rgba(0,136,204,0.2); border-radius:10px; padding:10px 14px; color:#E8F4FF; font-size:14px; margin-bottom:12px; }
+  .btn-refresh { background:#00AAFF; border:none; color:#000; border-radius:8px; padding:8px 16px; font-weight:bold; cursor:pointer; }
+  .withdrawal-card { background:rgba(0,136,204,0.06); border:1px solid rgba(0,136,204,0.2); border-radius:12px; padding:14px; margin-bottom:10px; }
+  .btn-approve { background:rgba(0,230,118,0.15); border:1px solid rgba(0,230,118,0.4); color:#00E676; border-radius:8px; padding:8px 16px; font-size:12px; cursor:pointer; }
+  .btn-reject { background:rgba(255,68,68,0.15); border:1px solid rgba(255,68,68,0.4); color:#FF4444; border-radius:8px; padding:8px 16px; font-size:12px; cursor:pointer; }
+  .tabs { display:flex; gap:8px; padding:0 16px 12px; }
+  .tab { flex:1; padding:10px; text-align:center; border-radius:10px; border:1px solid rgba(0,136,204,0.2); background:rgba(0,136,204,0.06); color:rgba(232,244,255,0.6); cursor:pointer; font-size:13px; }
+  .tab.active { background:rgba(0,136,204,0.2); color:#00AAFF; border-color:#00AAFF; }
+  .tab-content { display:none; }
+  .tab-content.active { display:block; }
+  .toast { position:fixed; bottom:40px; left:50%; transform:translateX(-50%); background:#00E676; color:#000; padding:10px 24px; border-radius:20px; font-weight:bold; display:none; z-index:999; }
+  .badge { display:inline-block; background:rgba(0,136,204,0.2); border:1px solid rgba(0,136,204,0.3); border-radius:20px; padding:3px 10px; font-size:11px; color:#00AAFF; }
+</style>
 </head>
 <body>
 
-<!-- PARTICLES -->
-<div id="particles"></div>
+<div class="header">
+  <h1>🔐 Admin TonNeed</h1>
+  <button class="btn-refresh" onclick="loadAll()">🔄 تحديث</button>
+</div>
 
-<!-- ===== AUTH SCREENS ===== -->
-<div id="screen-auth" class="screen active">
-  <div class="auth-screen">
-    <div class="auth-logo">TonNeed</div>
-    <div class="auth-tagline">⛏️ Mine & Earn TON Daily</div>
-
-    <!-- LOGIN -->
-    <div id="login-form" style="width:100%">
-      <div class="card" style="padding:24px">
-        <h2 style="text-align:center; margin-bottom:20px; font-size:18px">Login</h2>
-        <div class="input-group">
-          <label class="input-label">👛 TON Wallet (UQ)</label>
-          <input type="text" class="input-field" id="login-wallet" placeholder="UQ...">
-        </div>
-        <div class="input-group">
-          <label class="input-label">🔒 Password</label>
-          <input type="password" class="input-field" id="login-pass" placeholder="Password">
-        </div>
-        <button class="btn btn-primary" style="margin-top:8px" onclick="doLogin()">Login ⚡</button>
-      </div>
-      <div class="auth-switch">
-        Don't have an account? <a onclick="showRegister()">Register Now</a>
-        <br><br>
-        <a onclick="showAdminLogin()" style="color:var(--muted); font-size:11px">Admin Login 🔐</a>
-      </div>
-    </div>
-
-    <!-- REGISTER -->
-    <div id="register-form" style="width:100%; display:none">
-      <div class="card" style="padding:24px">
-        <h2 style="text-align:center; margin-bottom:20px; font-size:18px">Create Account</h2>
-        <div class="input-group">
-          <label class="input-label">👤 Name</label>
-          <input type="text" class="input-field" id="reg-name" placeholder="Your display name">
-        </div>
-        <div class="input-group">
-          <label class="input-label">👛 TON Wallet (UQ)</label>
-          <input type="text" class="input-field" id="reg-wallet" placeholder="UQ...">
-        </div>
-        <div class="input-group">
-          <label class="input-label">🔒 Password</label>
-          <input type="password" class="input-field" id="reg-pass" placeholder="Create a password">
-        </div>
-        <div class="input-group">
-          <label class="input-label">🔗 Referrer ID (optional)</label>
-          <input type="number" class="input-field" id="reg-ref" placeholder="ID of who invited you">
-        </div>
-        <button class="btn btn-primary" style="margin-top:8px" onclick="doRegister()">Create Account 🚀</button>
-      </div>
-      <div class="auth-switch">
-        Already have an account? <a onclick="showLogin()">Login</a>
-      </div>
-    </div>
-
-    <!-- ADMIN LOGIN -->
-    <div id="admin-login-form" style="width:100%; display:none">
-      <div class="card" style="padding:24px; border-color: var(--gold)">
-        <h2 style="text-align:center; margin-bottom:20px; font-size:18px; color:var(--gold)">🔐 Admin Panel</h2>
-        <button class="btn btn-gold" style="margin-top:8px" onclick="doAdminLogin()">Enter Admin Panel</button>
-      </div>
-      <div class="auth-switch"><a onclick="showLogin()">← Back</a></div>
-    </div>
+<div class="stats">
+  <div class="stat">
+    <div class="stat-num" id="total-users">-</div>
+    <div class="stat-label">👥 المشتركون</div>
+  </div>
+  <div class="stat">
+    <div class="stat-num" id="total-pending">-</div>
+    <div class="stat-label">🚀 السحوبات المعلقة</div>
   </div>
 </div>
 
-<!-- ===== MAIN APP ===== -->
-<div id="screen-app" class="screen">
-  <!-- HEADER -->
-  <div class="header">
-    <span class="logo">TonNeed</span>
-    <span class="header-id" id="user-id-display">ID: ---</span>
-  </div>
+<div class="tabs">
+  <div class="tab active" id="tab-btn-users" onclick="switchTab('users', this)">👥 المشتركون</div>
+  <div class="tab" id="tab-btn-withdrawals" onclick="switchTab('withdrawals', this)">🚀 السحوبات</div>
+</div>
 
-  <!-- HOME -->
-  <div id="tab-home" class="tab-content active">
-    <div class="container pb-nav" style="padding-top:20px">
-      
-      <!-- LEVEL & MINING SPEED -->
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px">
-        <div class="level-badge" id="home-level-badge">🏅 Level 1</div>
-        <div style="text-align:left; font-size:11px; color:var(--muted)">
-          Mining Speed<br>
-          <span style="color:var(--ton-light); font-family:Orbitron,monospace; font-size:14px" id="home-speed">0.1 TON/48h</span>
-        </div>
-      </div>
-
-      <!-- PROJECT DAYS -->
-      <div style="display:flex; gap:10px; margin-bottom:16px">
-        <div class="stat-card" style="flex:1; background:linear-gradient(135deg,rgba(0,136,204,0.15),rgba(0,136,204,0.05))">
-          <div class="stat-label">🗓️ Project Age</div>
-          <div class="stat-value" id="project-days">0</div>
-          <div class="stat-unit">Days Online</div>
-        </div>
-        <div class="stat-card" style="flex:1">
-          <div class="stat-label">👥 Total Members</div>
-          <div class="stat-value" id="home-total-members">0</div>
-          <div class="stat-unit">Users</div>
-        </div>
-      </div>
-
-      <!-- MINING ORB -->
-      <div class="mining-orb-wrap">
-        <div class="orb-ring-2"></div>
-        <div class="mining-orb" id="miningOrb">
-          <div class="orb-ring"></div>
-          <div class="orb-text">
-            <div>⛏️</div>
-            <div id="orb-status">Start</div>
-            <div class="orb-sub" id="orb-sub">Mining</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- MINING COUNTER -->
-      <div id="mining-counter-wrap" style="display:none; margin-bottom:16px">
-        <div class="card" style="padding:16px; text-align:center; border-color:rgba(0,230,118,0.3); background:rgba(0,230,118,0.05)">
-          <div style="font-size:10px; color:var(--muted); letter-spacing:2px; margin-bottom:10px; text-transform:uppercase">⛏️ Mining in Progress</div>
-
-          <!-- Big counter matching stat-value style -->
-          <div style="display:flex; align-items:baseline; justify-content:center; gap:8px; margin-bottom:8px">
-            <div style="font-family:'Orbitron',monospace; font-size:38px; font-weight:900; color:var(--green);
-                        text-shadow:0 0 25px rgba(0,230,118,0.6);
-                        letter-spacing:2px;
-                        transition:all 0.1s ease;"
-                 id="live-ton-counter">0.000000</div>
-            <div style="font-family:'Orbitron',monospace; font-size:16px; font-weight:700; color:rgba(0,230,118,0.6)">TON</div>
-          </div>
-
-          <!-- Rate row - same font as stat cards -->
-          <div style="display:flex; align-items:center; justify-content:center; gap:6px;
-                      font-family:'Orbitron',monospace; font-size:11px; color:var(--muted)">
-            <span>earning</span>
-            <span style="color:var(--green); font-size:13px; font-weight:700" id="rate-per-sec">0.000000</span>
-            <span>TON/sec</span>
-          </div>
-
-          <!-- Animated dots indicator -->
-          <div style="margin-top:10px; display:flex; justify-content:center; gap:5px" id="mining-dots">
-            <div style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:dotPulse 1.2s ease-in-out infinite"></div>
-            <div style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:dotPulse 1.2s ease-in-out 0.4s infinite"></div>
-            <div style="width:6px;height:6px;border-radius:50%;background:var(--green);animation:dotPulse 1.2s ease-in-out 0.8s infinite"></div>
-          </div>
-        </div>
-
-        <!-- hidden progress for background tracking -->
-        <div style="display:none">
-          <div id="progress-fill" style="width:0%"></div>
-          <span id="progress-pct">0%</span>
-          <div id="countdown">48:00:00</div>
-        </div>
-      </div>
-
-      <!-- COLLECT + WITHDRAW BUTTONS -->
-      <div style="display:flex; gap:10px; margin-bottom:16px">
-        <button class="btn" id="collect-btn" onclick="collectNow()"
-          style="flex:1; background:linear-gradient(135deg,#00C853,#00E676); color:#003300; font-weight:900; font-size:14px; padding:14px; border-radius:12px">
-          💰 Collect
-        </button>
-        <button class="btn btn-primary" id="withdraw-btn" onclick="openWithdraw()"
-          style="flex:1; font-size:14px; padding:14px; border-radius:12px">
-          💸 Withdraw
-        </button>
-      </div>
-      <div id="withdraw-warning" style="display:none; margin-bottom:12px; padding:10px; background:rgba(255,184,0,0.1); border:1px solid rgba(255,184,0,0.3); border-radius:8px; font-size:12px; color:var(--gold); text-align:center">
-        ⚠️ Minimum withdraw is <strong>0.1 TON</strong> — Balance: <span id="current-balance-warn">0</span> TON
-      </div>
-
-      <!-- BALANCE -->
-      <div class="card">
-        <div style="text-align:center; margin-bottom:16px">
-          <div style="font-size:12px; color:var(--muted); margin-bottom:4px">Your Balance</div>
-          <div class="wallet-balance"><span id="balance-display">0.00</span> <span class="wallet-unit">TON</span></div>
-        </div>
-        <div class="mining-stats">
-          <div class="stat-card">
-            <div class="stat-label">Earned Today</div>
-            <div class="stat-value" id="earned-today">0.00</div>
-            <div class="stat-unit">TON</div>
-          </div>
-          <div class="stat-card">
-            <div class="stat-label">Total Referrals</div>
-            <div class="stat-value" id="total-refs">0</div>
-            <div class="stat-unit">Referred</div>
-          </div>
-        </div>
-
-
-      </div>
-
-      <!-- UPGRADE -->
-      <div class="card" id="upgrade-card">
-        <div class="section-title">⬆️ Account Upgrade</div>
-        <div class="info-row">
-          <span class="label">Current Level</span>
-          <span class="value" id="current-level-txt">1</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Next Level</span>
-          <span class="value" id="next-level-txt">2</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Upgrade Cost</span>
-          <span class="value ton" id="upgrade-cost-txt">10 TON</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Project Wallet</span>
-          <span class="value" style="font-size:10px; color:var(--muted)">UQA-TmMK...V3pi2</span>
-        </div>
-        <div style="margin-top:12px; padding:10px; background:rgba(255,184,0,0.08); border-radius:8px; font-size:12px; color:var(--muted); margin-bottom:12px">
-          Send the upgrade amount to the project wallet, then press "Upgrade Now"
-        </div>
-        <button class="btn btn-gold" onclick="openUpgradeModal()">⬆️ Upgrade Now</button>
-      </div>
-
-    </div>
-  </div>
-
-  <!-- REFERRAL TAB -->
-  <div id="tab-referral" class="tab-content" style="display:none">
-    <div class="container pb-nav" style="padding-top:20px">
-      <div class="card">
-        <div class="section-title">🔗 Your Referral Link</div>
-        <div class="ref-link-box">
-          <span class="ref-link-text" id="ref-link">TonNeed.app/ref/---</span>
-          <button class="copy-btn" onclick="copyRef()">📋 Copy</button>
-        </div>
-        <div style="text-align:center; font-size:13px; color:var(--muted)">
-          Share the link and earn commission on every upgrade!
-        </div>
-      </div>
-
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px">
-          <div class="section-title" style="margin-bottom:0">👥 Your Referral Network</div>
-          <span style="font-size:12px; color:var(--muted)">
-            <span id="ref-count-display">0</span> Referred
-          </span>
-        </div>
-        <div id="referral-list">
-          <div style="text-align:center; padding:30px; color:var(--muted); font-size:13px">
-            No referrals yet<br>
-            <span style="font-size:11px">Share your link to get started!</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-title">💰 How do Referrals Work?</div>
-        <div class="info-row">
-          <span class="label">Level 1 (Free)</span>
-          <span class="value">Min. withdraw: 0.1 TON</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Levels 2-10</span>
-          <span class="value">Referrals = Bonus</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Your Upgrade Commission</span>
-          <span class="value" style="color:var(--gold)">10% of upgrade value</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- WALLET TAB -->
-  <div id="tab-wallet" class="tab-content" style="display:none">
-    <div class="container pb-nav" style="padding-top:20px">
-      <div class="card" style="border-color:rgba(0,170,255,0.4)">
-        <div class="wallet-display" style="padding:10px 0">
-          <div style="font-size:12px; color:var(--muted); margin-bottom:6px">💰 Total Balance</div>
-          <div class="wallet-balance"><span id="wallet-balance-display">0.00</span> <span class="wallet-unit">TON</span></div>
-        </div>
-        <!-- ملخص الأرباح -->
-        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin:14px 0">
-          <div style="background:rgba(0,230,118,0.08); border:1px solid rgba(0,230,118,0.2); border-radius:10px; padding:10px; text-align:center">
-            <div style="font-size:10px; color:var(--muted); margin-bottom:4px">⛏️ Mining</div>
-            <div style="font-family:'Orbitron',monospace; font-size:12px; font-weight:700; color:var(--green)" id="wallet-mining-earned">0.00</div>
-            <div style="font-size:9px; color:var(--muted)">TON</div>
-          </div>
-          <div style="background:rgba(255,184,0,0.08); border:1px solid rgba(255,184,0,0.2); border-radius:10px; padding:10px; text-align:center">
-            <div style="font-size:10px; color:var(--muted); margin-bottom:4px">👥 Referral</div>
-            <div style="font-family:'Orbitron',monospace; font-size:12px; font-weight:700; color:var(--gold)" id="wallet-ref-earned">0.00</div>
-            <div style="font-size:9px; color:var(--muted)">TON</div>
-          </div>
-          <div style="background:rgba(0,136,204,0.08); border:1px solid rgba(0,136,204,0.2); border-radius:10px; padding:10px; text-align:center">
-            <div style="font-size:10px; color:var(--muted); margin-bottom:4px">📤 Withdrawn</div>
-            <div style="font-family:'Orbitron',monospace; font-size:12px; font-weight:700; color:var(--ton-light)" id="wallet-withdrawn">0.00</div>
-            <div style="font-size:9px; color:var(--muted)">TON</div>
-          </div>
-        </div>
-        <div class="divider"></div>
-        <!-- زر السحب -->
-        <button class="btn btn-primary" id="wallet-withdraw-btn" onclick="openWithdrawFromWallet()" style="margin-bottom:10px; font-size:15px">
-          💸 Withdraw TON
-        </button>
-        <div id="wallet-withdraw-warning" style="display:none; padding:10px; background:rgba(255,184,0,0.1); border:1px solid rgba(255,184,0,0.3); border-radius:8px; font-size:12px; color:var(--gold); text-align:center">
-          ⚠️ Minimum withdraw is <strong>0.1 TON</strong><br>
-          <span style="font-size:11px; color:var(--muted)">Balance: <span id="wallet-balance-warn">0</span> TON</span>
-        </div>
-        <div class="divider"></div>
-        <div class="info-row">
-          <span class="label">Your Wallet (UQ)</span>
-        </div>
-        <div class="wallet-address" id="wallet-address-display">---</div>
-        <button class="btn btn-outline btn-sm" onclick="copyWallet()" style="width:100%; margin-top:8px">📋 Copy Address</button>
-      </div>
-
-      <div class="card">
-        <div class="section-title">📊 Statistics</div>
-        <div class="info-row">
-          <span class="label">Total Earned</span>
-          <span class="value ton" id="total-earned-display">0.00 TON</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Total Withdrawn</span>
-          <span class="value ton" id="total-withdrawn-display">0.00 TON</span>
-        </div>
-        <div class="info-row">
-          <span class="label">Referral Commission</span>
-          <span class="value ton" id="ref-commission-display">0.00 TON</span>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="section-title">📜 Transaction History</div>
-        <div id="tx-history">
-          <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No transactions yet</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- LEVELS TAB -->
-  <div id="tab-levels" class="tab-content" style="display:none">
-    <div class="container pb-nav" style="padding-top:20px">
-      <div class="card" style="padding:16px; margin-bottom:20px; text-align:center">
-        <div style="font-size:12px; color:var(--muted); margin-bottom:4px">Your Current Level</div>
-        <div class="level-badge" style="display:inline-flex; font-size:16px; padding:8px 20px" id="levels-badge">🏅 Level 1</div>
-      </div>
-      <div id="levels-list"></div>
-    </div>
-  </div>
-
-  <!-- BOTTOM NAV -->
-  <div class="nav">
-    <button class="nav-btn active" onclick="switchTab('home', this)">
-      <span class="nav-icon">⛏️</span>
-      <span>Mining</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('referral', this)">
-      <span class="nav-icon">👥</span>
-      <span>Referrals</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('wallet', this)">
-      <span class="nav-icon">💰</span>
-      <span>Wallet</span>
-    </button>
-    <button class="nav-btn" onclick="switchTab('levels', this)">
-      <span class="nav-icon">🏆</span>
-      <span>Levels</span>
-    </button>
-    <button class="nav-btn" onclick="confirmExit()" style="color:#FF4444">
-      <span class="nav-icon">🚪</span>
-      <span>Exit</span>
-    </button>
+<div id="tab-users" class="tab-content active">
+  <div class="section">
+    <input class="search-box" id="search" placeholder="🔍 ابحث بالـ ID أو الاسم..." oninput="filterUsers()">
+    <div id="users-list"><div class="loading">⏳ جاري التحميل...</div></div>
   </div>
 </div>
 
-<!-- ===== ADMIN PANEL ===== -->
-<div id="screen-admin" class="screen">
-  <div class="header">
-    <span class="logo" style="font-size:16px">Admin 🔐</span>
-    <button class="btn btn-sm btn-outline" onclick="logoutAdmin()" style="font-size:11px; padding:6px 12px">Logout</button>
-  </div>
-
-  <div class="container pb-nav" style="padding-top:20px">
-
-    <!-- STATS -->
-    <div class="mining-stats" style="margin-bottom:16px">
-      <div class="stat-card">
-        <div class="stat-label">Users</div>
-        <div class="stat-value" id="admin-total-users">0</div>
-        <div class="stat-unit">Users</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-label">Withdrawals</div>
-        <div class="stat-value" id="admin-pending-w">0</div>
-        <div class="stat-unit">Pending</div>
-      </div>
-    </div>
-
-    <!-- COMMISSION SETTINGS -->
-    <div class="card" style="border-color:rgba(255,184,0,0.4)">
-      <div class="section-title" style="color:var(--gold)">⚙️ Referral Commission Per Level</div>
-      <div style="font-size:12px; color:var(--muted); margin-bottom:14px">Set the % commission sent to the referrer when an invited user upgrades</div>
-      <div id="commissions-settings-list"></div>
-      <button class="btn btn-gold" style="margin-top:4px" onclick="saveCommissions()">💾 Save Settings</button>
-    </div>
-
-    <!-- PENDING PAYOUTS -->
-    <div class="card">
-      <div class="section-title">💸 Referral Commission Payouts</div>
-      <div id="admin-payouts-list">
-        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No pending payouts</div>
-      </div>
-    </div>
-
-    <!-- ALL USERS -->
-    <div class="card">
-      <div class="section-title">👥 All Users <span id="admin-users-count" style="font-size:12px; color:var(--muted); font-weight:400"></span></div>
-      <div style="display:flex; gap:8px; margin-bottom:10px">
-        <input type="number" class="search-input" id="admin-search-id" placeholder="🔍 ابحث بالـ ID..." oninput="renderAdminUsers()"
-          style="flex:1; background:rgba(0,136,204,0.08); border:1px solid var(--border); border-radius:10px; color:var(--text); padding:10px; font-size:13px; outline:none">
-        <button class="btn btn-sm btn-outline" onclick="document.getElementById('admin-search-id').value=''; renderAdminUsers()" style="padding:8px 14px; font-size:12px">✕</button>
-      </div>
-      <div id="admin-users-list"></div>
-    </div>
-
-    <!-- WITHDRAWAL REQUESTS -->
-    <div class="card">
-      <div class="section-title">📤 Withdrawals</div>
-      <div id="admin-withdrawals-list">
-        <div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No withdrawal requests</div>
-      </div>
-    </div>
-
-  </div>
-
-  <div class="nav">
-    <button class="nav-btn active" style="flex:1; color:var(--gold)">🛡️ Admin Panel</button>
+<div id="tab-withdrawals" class="tab-content">
+  <div class="section">
+    <div id="withdrawals-list"><div class="loading">⏳ جاري التحميل...</div></div>
   </div>
 </div>
 
-<!-- MODALS -->
-<!-- UPGRADE MODAL -->
-<div class="modal-overlay" id="upgrade-modal">
-  <div class="modal">
-    <div class="modal-title">⬆️ Account Upgrade</div>
-    <div id="upgrade-modal-content"></div>
-    <button class="btn btn-gold" onclick="confirmUpgrade()" style="margin-top:12px">✅ I Confirm Sending</button>
-    <button class="btn btn-outline" onclick="closeModal('upgrade-modal')" style="margin-top:8px">Cancel</button>
-  </div>
-</div>
-
-<!-- WITHDRAW MODAL -->
-<div class="modal-overlay" id="withdraw-modal">
-  <div class="modal">
-    <div class="modal-title">💸 Withdraw</div>
-    <div id="withdraw-modal-content"></div>
-    <button class="btn btn-primary" onclick="confirmWithdraw()" style="margin-top:12px">📤 Submit Withdrawal Request</button>
-    <button class="btn btn-outline" onclick="closeModal('withdraw-modal')" style="margin-top:8px">Cancel</button>
-  </div>
-</div>
-
-<!-- USER TREE MODAL -->
-<div class="modal-overlay" id="tree-modal">
-  <div class="modal">
-    <div class="modal-title" id="tree-modal-title">Tree Referrals</div>
-    <div id="tree-modal-content" style="max-height:60vh; overflow-y:auto"></div>
-    <button class="btn btn-outline" onclick="closeModal('tree-modal')" style="margin-top:12px">Close</button>
-  </div>
-</div>
-
-<!-- TOAST -->
 <div class="toast" id="toast"></div>
 
 <script>
-// ===== FIREBASE CONFIG =====
 const firebaseConfig = {
   apiKey: "AIzaSyAsNRuN09FLendzP60yBaiw7hV3Toex0D0",
   authDomain: "tonminer-87923.firebaseapp.com",
   databaseURL: "https://tonminer-87923-default-rtdb.firebaseio.com",
   projectId: "tonminer-87923",
   storageBucket: "tonminer-87923.firebasestorage.app",
-  messagingSenderId: "736875130208",
-  appId: "1:736875130208:web:5741503e947609f09bc205"
+  messagingSenderId: "448286820819",
+  appId: "1:448286820819:web:abc123"
 };
+
 firebase.initializeApp(firebaseConfig);
-const firebaseDb = firebase.database();
+const fdb = firebase.database();
 
-function saveDb() {
-  firebaseDb.ref('tonneed').set(db);
-  localStorage.setItem('tonneed_db_admin', JSON.stringify(db));
+let allUsers = [];
+let allWithdrawals = [];
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 3000);
 }
 
-function loadDb(callback) {
-  firebaseDb.ref('tonneed').once('value').then(snapshot => {
+function switchTab(name, el) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  el.classList.add('active');
+}
+
+function toArray(val) {
+  if (!val) return [];
+  if (Array.isArray(val)) return val.filter(v => v != null);
+  return Object.values(val).filter(v => v != null);
+}
+
+function loadAll() {
+  document.getElementById('users-list').innerHTML = '<div class="loading">⏳ جاري التحميل...</div>';
+  document.getElementById('withdrawals-list').innerHTML = '<div class="loading">⏳ جاري التحميل...</div>';
+
+  fdb.ref('tonneed').once('value').then(snapshot => {
     const data = snapshot.val();
-    if (data) {
-      db = data;
-      // Convert users array if needed
-      if (Array.isArray(db.users)) {
-        db.users = db.users.filter(u => u !== null && u !== undefined);
-      } else if (db.users && typeof db.users === 'object') {
-        db.users = Object.values(db.users).filter(u => u !== null && u !== undefined);
-      }
-      if (!db.users) db.users = [];
-      if (!db.withdrawals) db.withdrawals = [];
-      if (!db.payouts) db.payouts = [];
-      if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
-    }
-    callback();
-  }).catch(() => {
-    callback();
-  });
-}
-
-// ===== TELEGRAM WEBAPP =====
-const tgWebApp = window.Telegram && window.Telegram.WebApp;
-if (tgWebApp) {
-  tgWebApp.ready();
-  tgWebApp.expand();
-}
-
-function getTelegramUserId() {
-  try {
-    if (tgWebApp && tgWebApp.initDataUnsafe && tgWebApp.initDataUnsafe.user) {
-      return 'tg_' + tgWebApp.initDataUnsafe.user.id;
-    }
-  } catch(e) {}
-  return null;
-}
-
-function getTelegramUserName() {
-  try {
-    if (tgWebApp && tgWebApp.initDataUnsafe && tgWebApp.initDataUnsafe.user) {
-      const u = tgWebApp.initDataUnsafe.user;
-      return u.first_name + (u.last_name ? ' ' + u.last_name : '');
-    }
-  } catch(e) {}
-  return null;
-}
-
-// ===== TELEGRAM NOTIFICATIONS =====
-const TG_TOKEN = '8098144295:AAEMYi2AIq3x4tO5BTf5QOtfD2L5YmGIS_0';
-const TG_CHAT = '7871311618';
-
-function sendTelegram(msg) {
-  fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ chat_id: TG_CHAT, text: msg, parse_mode: 'HTML' })
-  }).catch(() => {});
-}
-
-// ===== DATA STORE =====
-// Default commission rates per level (editable from admin panel)
-const DEFAULT_COMMISSIONS = {
-  2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 10, 10: 10
-};
-
-let db = JSON.parse(localStorage.getItem('tonneed_db_admin') || JSON.stringify({
-  users: [{
-    id: 555497,
-    name: 'Admin Root',
-    wallet: 'UQA-TmMKLnasH4aP1TG114M6Qqbz38DFs_5zkKU4vaoV3pi2',
-    password: 'admin555497',
-    level: 10,
-    balance: 0,
-    uplineId: null,
-    referrals: [],
-    miningStart: null,
-    totalEarned: 0,
-    totalWithdrawn: 0,
-    refCommission: 0,
-    txHistory: [],
-    createdAt: Date.now()
-  }],
-  withdrawals: [],
-  payouts: [],
-  nextId: 100001,
-  commissions: { ...DEFAULT_COMMISSIONS }
-}));
-
-// Ensure commissions exist in older DB versions
-if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
-
-const ADMIN_PASS = 'TonNeed@Admin2024';
-const PROJECT_WALLET = 'UQA-TmMKLnasH4aP1TG114M6Qqbz38DFs_5zkKU4vaoV3pi2';
-const LAUNCH_DATE = new Date('2026-03-08').getTime();
-
-const LEVELS = [
-  { level: 0,  name: 'Free',         price: 0,  speed: 0.05, interval: 24 },
-  { level: 1,  name: 'Beginner',     price: 0,  speed: 0.1,  interval: 24 },
-  { level: 2,  name: 'Trainee',      price: 1,  speed: 0.5,  interval: 24 },
-  { level: 3,  name: 'Intermediate', price: 2,  speed: 1.0,  interval: 24 },
-  { level: 4,  name: 'Advanced',     price: 4,  speed: 2.0,  interval: 24 },
-  { level: 5,  name: 'Professional', price: 6,  speed: 3.0,  interval: 24 },
-  { level: 6,  name: 'Expert',       price: 8,  speed: 4.0,  interval: 24 },
-  { level: 7,  name: 'Master',       price: 10, speed: 5.0,  interval: 24 },
-  { level: 8,  name: 'Elite',        price: 12, speed: 6.0,  interval: 24 },
-  { level: 9,  name: 'Legend',       price: 14, speed: 7.0,  interval: 24 },
-  { level: 10, name: 'Grand Master', price: 16, speed: 8.0,  interval: 24 },
-];
-
-function getCommission(level) {
-  return db.commissions[level] ?? 0;
-}
-
-// saveDb defined above
-
-let currentUser = null;
-let timerInterval = null;
-
-// ===== PARTICLES =====
-(function() {
-  const wrap = document.getElementById('particles');
-  for (let i = 0; i < 15; i++) {
-    const p = document.createElement('div');
-    p.className = 'particle';
-    p.style.left = Math.random() * 100 + 'vw';
-    p.style.animationDuration = (8 + Math.random() * 12) + 's';
-    p.style.animationDelay = (Math.random() * 15) + 's';
-    p.style.width = p.style.height = (2 + Math.random() * 4) + 'px';
-    p.style.opacity = 0.1 + Math.random() * 0.3;
-    wrap.appendChild(p);
-  }
-})();
-
-// ===== AUTH =====
-function showRegister() {
-  document.getElementById('login-form').style.display = 'none';
-  document.getElementById('register-form').style.display = 'block';
-  document.getElementById('admin-login-form').style.display = 'none';
-
-  // Auto-fill referrer from URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const ref = urlParams.get('ref');
-  if (ref) document.getElementById('reg-ref').value = ref;
-}
-
-function showLogin() {
-  document.getElementById('login-form').style.display = 'block';
-  document.getElementById('register-form').style.display = 'none';
-  document.getElementById('admin-login-form').style.display = 'none';
-}
-
-function showAdminLogin() {
-  document.getElementById('login-form').style.display = 'none';
-  document.getElementById('register-form').style.display = 'none';
-  document.getElementById('admin-login-form').style.display = 'block';
-}
-
-// Generate device fingerprint
-function getDeviceId() {
-  try {
-    const nav = window.navigator;
-    const raw = [
-      nav.userAgent || '',
-      nav.language || '',
-      (screen && screen.width ? screen.width + 'x' + screen.height : '0x0'),
-      (screen && screen.colorDepth ? screen.colorDepth : ''),
-      new Date().getTimezoneOffset(),
-      nav.hardwareConcurrency || '',
-      nav.platform || ''
-    ].join('|');
-    let hash = 0;
-    for (let i = 0; i < raw.length; i++) {
-      hash = ((hash << 5) - hash) + raw.charCodeAt(i);
-      hash |= 0;
-    }
-    // Use Telegram user ID as part of device ID if available
-    const tgId = getTelegramUserId();
-    if (tgId) return 'dev_tg_' + tgId;
-    return 'dev_' + Math.abs(hash).toString(36);
-  } catch(e) {
-    return 'dev_' + Date.now().toString(36);
-  }
-}
-
-function doRegister() {
-  const name = document.getElementById('reg-name').value.trim();
-  const wallet = document.getElementById('reg-wallet').value.trim();
-  const pass = document.getElementById('reg-pass').value;
-  const refId = parseInt(document.getElementById('reg-ref').value) || null;
-
-  if (!name) return showToast('Please enter your name');
-  if (!wallet.startsWith('UQ')) return showToast('Wallet must start with UQ');
-  if (wallet.length < 30) return showToast('❌ Invalid wallet address');
-  if (!pass || pass.length < 6) return showToast('Password must be 6 characters minimum');
-
-  // 🚫 Block duplicate wallet
-  const existingWallet = db.users.find(u => u.wallet === wallet);
-  if (existingWallet) {
-    showToast('❌ This wallet is already registered!');
-    setTimeout(() => {
-      showLogin();
-      document.getElementById('login-wallet').value = wallet;
-    }, 1500);
-    return;
-  }
-
-  // 🚫 Block duplicate Telegram account
-  const tgId = getTelegramUserId();
-  if (tgId) {
-    const existingTg = db.users.find(u => u.telegramId === tgId);
-    if (existingTg) {
-      showToast('❌ حساب Telegram هذا مسجل مسبقاً!');
-      setTimeout(() => {
-        showLogin();
-        document.getElementById('login-wallet').value = existingTg.wallet;
-      }, 1500);
+    if (!data) {
+      document.getElementById('users-list').innerHTML = '<div class="loading">❌ لا توجد بيانات في Firebase</div>';
       return;
     }
-  }
 
-  // 🚫 Block duplicate device
-  const deviceId = getDeviceId();
-  const existingDevice = db.users.find(u => u.deviceId === deviceId);
-  if (existingDevice) {
-    showToast('❌ An account already exists on this device!');
-    setTimeout(() => {
-      showLogin();
-      document.getElementById('login-wallet').value = existingDevice.wallet;
-    }, 1500);
-    return;
-  }
+    allUsers = toArray(data.users);
+    allWithdrawals = toArray(data.withdrawals);
 
-  // Validate upline
-  if (refId) {
-    const upline = db.users.find(u => u.id === refId);
-    if (!upline) return showToast('Invalid referrer ID');
-  }
+    document.getElementById('total-users').textContent = allUsers.length;
+    document.getElementById('total-pending').textContent = allWithdrawals.filter(w => w.status === 'pending').length;
 
-  const newUser = {
-    id: db.nextId++,
-    name: getTelegramUserName() || name,
-    wallet,
-    password: pass,
-    level: 1,
-    balance: 0,
-    uplineId: refId || 555497,
-    referrals: [],
-    miningStart: null,
-    totalEarned: 0,
-    totalWithdrawn: 0,
-    refCommission: 0,
-    txHistory: [],
-    deviceId: deviceId,
-    telegramId: getTelegramUserId() || null,
-    createdAt: Date.now()
-  };
-
-  db.users.push(newUser);
-
-  // Add to upline referrals
-  const upline = db.users.find(u => u.id === newUser.uplineId);
-  if (upline) upline.referrals.push(newUser.id);
-
-  saveDb();
-  sendTelegram(`🆕 <b>مستخدم جديد!</b>
-👤 الاسم: ${newUser.name}
-🆔 ID: ${newUser.id}
-👛 المحفظة: ${newUser.wallet}
-📅 التاريخ: ${new Date().toLocaleString('ar')}`);
-  showToast('✅ Account created! Welcome ' + newUser.name);
-  setTimeout(() => { loginUser(newUser); }, 1000);
-}
-
-
-function doLogin() {
-  const wallet = document.getElementById('login-wallet').value.trim();
-  const pass = document.getElementById('login-pass').value;
-  if (!wallet) return showToast('❌ Please enter your wallet address');
-  if (!wallet.startsWith('UQ')) return showToast('❌ Wallet must start with UQ');
-  const user = db.users.find(u => u.wallet === wallet && u.password === pass);
-  if (!user) return showToast('❌ Incorrect wallet or password');
-
-  // 🚫 Block duplicate Telegram on login
-  const tgId = getTelegramUserId();
-  if (tgId && user.telegramId && user.telegramId !== tgId) {
-    return showToast('❌ هذا الحساب مرتبط بحساب Telegram آخر!');
-  }
-  // Save telegramId if not set
-  if (tgId && !user.telegramId) {
-    user.telegramId = tgId;
-    saveDb();
-  }
-
-  // Update device ID on login (allow legitimate re-login on new device)
-  const deviceId = getDeviceId();
-  const deviceOwner = db.users.find(u => u.deviceId === deviceId && u.wallet !== wallet);
-  if (deviceOwner) {
-    return showToast('❌ Another account is already linked to this device!');
-  }
-
-  // Update deviceId if not set
-  if (!user.deviceId) {
-    user.deviceId = deviceId;
-    saveDb();
-  }
-
-  loginUser(user);
-}
-
-function doAdminLogin() {
-  showScreen('admin');
-  renderAdminPanel();
-}
-
-function loginUser(user) {
-  currentUser = user;
-  const dbUser = db.users.find(u => u.id === user.id);
-
-  if (dbUser) {
-    const lvl = LEVELS[dbUser.level - 1];
-    const total = lvl.interval * 3600 * 1000;
-
-    if (!dbUser.miningStart) {
-      // لم يبدأ التعدين أبداً — ابدأه الآن
-      dbUser.miningStart = Date.now();
-      saveDb();
-    } else {
-      // حساب كم دورة انتهت أثناء الغياب
-      const elapsed = Date.now() - dbUser.miningStart;
-      if (elapsed >= total) {
-        const cyclesCompleted = Math.floor(elapsed / total);
-        const earned = cyclesCompleted * lvl.speed;
-        dbUser.balance = parseFloat((dbUser.balance + earned).toFixed(4));
-        dbUser.totalEarned = (dbUser.totalEarned || 0) + earned;
-        dbUser.txHistory.unshift({
-          type: 'mine',
-          amount: earned,
-          date: Date.now(),
-          desc: `Mining x${cyclesCompleted} cycles (offline)`
-        });
-        // ابدأ دورة جديدة من وقت انتهاء آخر دورة
-        dbUser.miningStart = dbUser.miningStart + (cyclesCompleted * total);
-        saveDb();
-        setTimeout(() => showToast(`🎉 Offline mining: +${earned.toFixed(4)} TON!`), 1500);
-      }
-    }
-    currentUser = dbUser;
-  }
-
-  showScreen('app');
-  renderApp();
-  showTab('home');
-}
-
-// ===== SCREENS =====
-function showScreen(name) {
-  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-  document.getElementById('screen-' + name).classList.add('active');
-}
-
-function switchTab(name, btn) {
-  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).style.display = 'block';
-  btn.classList.add('active');
-  if (name === 'referral') renderReferral();
-  if (name === 'wallet') renderWallet();
-  if (name === 'levels') renderLevels();
-}
-
-function showTab(name) {
-  document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('tab-' + name).style.display = 'block';
-  document.querySelector('.nav-btn').classList.add('active');
-}
-
-// ===== RENDER APP =====
-function renderApp() {
-  if (!currentUser) return;
-  const user = db.users.find(u => u.id === currentUser.id);
-  currentUser = user;
-
-  const lvl = LEVELS[user.level - 1];
-  document.getElementById('user-id-display').textContent = `ID: ${user.id}`;
-  document.getElementById('home-level-badge').textContent = `${getLevelIcon(user.level)} Level ${user.level}`;
-  document.getElementById('home-speed').textContent = `${lvl.speed} TON/24h`;
-  document.getElementById('balance-display').textContent = user.balance.toFixed(4);
-  document.getElementById('total-refs').textContent = user.referrals.length;
-  document.getElementById('earned-today').textContent = (lvl.speed / 2).toFixed(4);
-
-  // Ref link
-  document.getElementById('ref-link').textContent = `TonNeed.app/ref/${user.id}`;
-
-  // Upgrade card
-  if (user.level >= 10) {
-    document.getElementById('upgrade-card').style.display = 'none';
-  } else {
-    const next = LEVELS[user.level];
-    document.getElementById('current-level-txt').textContent = user.level;
-    document.getElementById('next-level-txt').textContent = user.level + 1;
-    document.getElementById('upgrade-cost-txt').textContent = `${next.price} TON`;
-  }
-
-  // Project days counter
-  const daysSinceLaunch = Math.floor((Date.now() - LAUNCH_DATE) / (1000 * 60 * 60 * 24));
-  document.getElementById('project-days').textContent = daysSinceLaunch;
-  document.getElementById('home-total-members').textContent = db.users.length;
-
-  // Withdraw check
-  checkWithdraw();
-  renderMiningTimer();
-}
-
-function getLevelIcon(level) {
-  const icons = ['🏅','🥈','🥇','💎','🔥','⚡','🌟','👑','🚀','🏆'];
-  return icons[level - 1] || '🏅';
-}
-
-function checkWithdraw() {
-  const user = currentUser;
-  const withdrawBtn = document.getElementById('withdraw-btn');
-  const warning = document.getElementById('withdraw-warning');
-
-  // زر السحب يظهر دائماً
-  withdrawBtn.style.display = 'block';
-
-  if (user.balance < 0.1) {
-    withdrawBtn.disabled = true;
-    withdrawBtn.style.opacity = '0.5';
-    withdrawBtn.style.cursor = 'not-allowed';
-    warning.style.display = 'block';
-    document.getElementById('current-balance-warn').textContent = user.balance.toFixed(4);
-  } else {
-    withdrawBtn.disabled = false;
-    withdrawBtn.style.opacity = '1';
-    withdrawBtn.style.cursor = 'pointer';
-    warning.style.display = 'none';
-  }
-}
-
-// ===== MINING =====
-function startMining() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  if (user.miningStart) return;
-  user.miningStart = Date.now();
-  saveDb();
-  currentUser = user;
-  renderMiningTimer();
-  showToast('⛏️ started Mining!');
-}
-
-function renderMiningTimer() {
-  const user = currentUser;
-  if (!user.miningStart) {
-    document.getElementById('mining-counter-wrap').style.display = 'none';
-    document.getElementById('orb-status').textContent = 'Start';
-    document.getElementById('orb-sub').textContent = 'Mining';
-    return;
-  }
-
-  const lvl = LEVELS[user.level - 1];
-  const total = lvl.interval * 3600 * 1000; // 48h in ms
-  const elapsed = Date.now() - user.miningStart;
-
-  if (elapsed >= total) {
-    completeMining();
-    return;
-  }
-
-  document.getElementById('mining-counter-wrap').style.display = 'block';
-  document.getElementById('orb-status').textContent = '⛏️';
-  document.getElementById('orb-sub').textContent = 'Mining...';
-
-  // Rate per second
-  const ratePerMs = lvl.speed / total;
-  const ratePerSec = ratePerMs * 1000;
-  document.getElementById('rate-per-sec').textContent = ratePerSec.toFixed(6);
-
-  if (timerInterval) clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    const now = Date.now();
-    const e = now - user.miningStart;
-    if (e >= total) { clearInterval(timerInterval); completeMining(); return; }
-
-    // Live TON counter — shows earned so far
-    const earnedSoFar = ratePerMs * e;
-    document.getElementById('live-ton-counter').textContent = earnedSoFar.toFixed(6);
-
-    // Update collect amount live
-    const collectWrap = document.getElementById('collect-earned-wrap');
-    const collectAmt = document.getElementById('collect-amount');
-    if (collectWrap) collectWrap.style.display = 'block';
-    if (collectAmt) collectAmt.textContent = earnedSoFar.toFixed(6);
-
-    // Background progress tracking (hidden)
-    const pct = Math.round((e / total) * 100);
-    document.getElementById('progress-fill').style.width = pct + '%';
-    document.getElementById('progress-pct').textContent = pct + '%';
-  }, 100); // update every 100ms for smooth counter
-}
-
-function collectMining() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  if (!user.pendingMining || user.pendingMining <= 0) return;
-  const earned = user.pendingMining;
-  user.balance = parseFloat((user.balance + earned).toFixed(4));
-  user.totalEarned = (user.totalEarned || 0) + earned;
-  user.pendingMining = 0;
-  user.txHistory.unshift({ type: 'mine', amount: earned, date: Date.now(), desc: 'Mining Collected' });
-  saveDb();
-  currentUser = user;
-  document.getElementById('collect-section').style.display = 'none';
-  document.getElementById('balance-display').textContent = user.balance.toFixed(4);
-  checkWithdraw();
-  showToast('💰 ' + earned.toFixed(4) + ' TON Collected!');
-}
-
-function completeMining() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  const lvl = LEVELS[user.level - 1];
-  user.balance = parseFloat((user.balance + lvl.speed).toFixed(4));
-  user.totalEarned = (user.totalEarned || 0) + lvl.speed;
-  user.txHistory.unshift({ type: 'mine', amount: lvl.speed, date: Date.now(), desc: 'Mining Completed' });
-  // ✅ إعادة التعدين تلقائياً بدون توقف
-  user.miningStart = Date.now();
-  saveDb();
-  currentUser = user;
-  document.getElementById('balance-display').textContent = user.balance.toFixed(4);
-  checkWithdraw();
-  showToast(`🎉 +${lvl.speed} TON! ⛏️ Auto-restarted!`);
-  // استمر في التعدين
-  renderMiningTimer();
-}
-
-function collectNow() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  if (!user.miningStart) {
-    // إذا لم يكن التعدين شغالاً، ابدأه تلقائياً
-    user.miningStart = Date.now();
-    saveDb();
-    currentUser = user;
-    renderMiningTimer();
-    showToast('⛏️ Mining started!');
-    return;
-  }
-  const lvl = LEVELS[user.level - 1];
-  const total = lvl.interval * 3600 * 1000;
-  const elapsed = Date.now() - user.miningStart;
-  const earned = parseFloat(((lvl.speed / total) * Math.min(elapsed, total)).toFixed(6));
-  if (earned <= 0) { showToast('⏳ Nothing to collect yet'); return; }
-  user.balance = parseFloat((user.balance + earned).toFixed(4));
-  user.totalEarned = (user.totalEarned || 0) + earned;
-  user.txHistory.unshift({ type: 'mine', amount: earned, date: Date.now(), desc: 'Mining Collected' });
-  // ✅ إعادة تشغيل العداد من الصفر فوراً
-  user.miningStart = Date.now();
-  saveDb();
-  currentUser = user;
-  if (timerInterval) clearInterval(timerInterval);
-  document.getElementById('balance-display').textContent = user.balance.toFixed(4);
-  // إعادة ضبط العداد المرئي إلى صفر ثم يبدأ
-  const counter = document.getElementById('live-ton-counter');
-  if (counter) counter.textContent = '0.000000';
-  checkWithdraw();
-  showToast('💰 +' + earned.toFixed(4) + ' TON! ⛏️ Mining restarted!');
-  renderMiningTimer();
-}
-
-// ===== REFERRAL =====
-function renderReferral() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  document.getElementById('ref-count-display').textContent = user.referrals.length;
-  const list = document.getElementById('referral-list');
-
-  if (!user.referrals.length) {
-    list.innerHTML = `<div style="text-align:center; padding:30px; color:var(--muted); font-size:13px">No referrals yet<br><span style="font-size:11px">Share your link to get started!</span></div>`;
-    return;
-  }
-
-  list.innerHTML = user.referrals.map(refId => {
-    const ref = db.users.find(u => u.id === refId);
-    if (!ref) return '';
-    return `<div class="ref-item">
-      <div class="ref-info">
-        <div class="ref-avatar">${ref.name.charAt(0)}</div>
-        <div>
-          <div class="ref-name">${ref.name}</div>
-          <div class="ref-meta">ID: ${ref.id} • ${new Date(ref.createdAt).toLocaleDateString('en')}</div>
-        </div>
-      </div>
-      <div class="ref-level-badge">Lv${ref.level}</div>
-    </div>`;
-  }).join('');
-}
-
-// ===== WALLET =====
-function openWithdrawFromWallet() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  if (user.balance < 0.1) {
-    showToast('❌ Minimum withdrawal is 0.1 TON');
-    return;
-  }
-  openWithdraw();
-}
-
-function renderWallet() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  document.getElementById('wallet-balance-display').textContent = user.balance.toFixed(4);
-  document.getElementById('wallet-address-display').textContent = user.wallet;
-  document.getElementById('total-earned-display').textContent = user.totalEarned.toFixed(4) + ' TON';
-  document.getElementById('total-withdrawn-display').textContent = user.totalWithdrawn.toFixed(4) + ' TON';
-  document.getElementById('ref-commission-display').textContent = user.refCommission.toFixed(4) + ' TON';
-
-  // ملخص الأرباح
-  const miningEarned = user.txHistory.filter(t => t.type === 'mine').reduce((s, t) => s + t.amount, 0);
-  document.getElementById('wallet-mining-earned').textContent = miningEarned.toFixed(4);
-  document.getElementById('wallet-ref-earned').textContent = user.refCommission.toFixed(4);
-  document.getElementById('wallet-withdrawn').textContent = user.totalWithdrawn.toFixed(4);
-
-  // زر السحب
-  const warnEl = document.getElementById('wallet-withdraw-warning');
-  const btnEl = document.getElementById('wallet-withdraw-btn');
-  if (user.balance < 0.1) {
-    btnEl.disabled = true;
-    btnEl.style.opacity = '0.5';
-    warnEl.style.display = 'block';
-    document.getElementById('wallet-balance-warn').textContent = user.balance.toFixed(4);
-  } else {
-    btnEl.disabled = false;
-    btnEl.style.opacity = '1';
-    warnEl.style.display = 'none';
-  }
-
-  const txList = document.getElementById('tx-history');
-  if (!user.txHistory.length) {
-    txList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No transactions yet</div>';
-    return;
-  }
-  txList.innerHTML = user.txHistory.slice(0, 20).map(tx => `
-    <div class="info-row">
-      <span class="label">${tx.desc}<br><span style="font-size:10px">${new Date(tx.date).toLocaleDateString('en')}</span></span>
-      <span class="value" style="color:${tx.type === 'withdraw' ? 'var(--red)' : 'var(--green)'}">
-        ${tx.type === 'withdraw' ? '-' : '+'}${tx.amount.toFixed(4)} TON
-      </span>
-    </div>`).join('');
-}
-
-// ===== LEVELS =====
-function renderLevels() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  document.getElementById('levels-badge').textContent = `${getLevelIcon(user.level)} Level ${user.level} — ${(LEVELS[user.level]||LEVELS[0]).name}`;
-
-  const list = document.getElementById('levels-list');
-  list.innerHTML = LEVELS.map(lvl => {
-    const isCurrent = lvl.level === user.level;
-    const isOwned   = lvl.level < user.level;
-    const canBuy    = lvl.level > user.level && lvl.price > 0;
-
-    return `<div class="level-card ${isCurrent ? 'current' : ''}" style="margin-bottom:12px">
-      <div class="level-card-header">
-        <div style="display:flex;align-items:center;gap:8px">
-          <span style="font-family:Orbitron,monospace;font-size:22px;font-weight:900;color:var(--ton-light)">${getLevelIcon(lvl.level)} ${lvl.level}</span>
-          <span style="font-size:13px;color:var(--muted)">${lvl.name}</span>
-        </div>
-        <div>
-          ${isCurrent ? '<span class="status-badge status-active">✦ Active</span>' : ''}
-          ${isOwned   ? '<span class="status-badge status-done">✓ Owned</span>' : ''}
-          ${lvl.price === 0 && !isCurrent && !isOwned ? '<span class="status-badge status-active">Free</span>' : ''}
-          ${canBuy    ? `<span style="color:var(--gold);font-family:Orbitron,monospace;font-size:13px;font-weight:700">${lvl.price} TON</span>` : ''}
-        </div>
-      </div>
-      <div class="level-details">
-        <div class="level-detail-item"><strong style="color:var(--green)">${lvl.speed} TON</strong><span>every 48h</span></div>
-        <div class="level-detail-item"><strong>From 0.1 TON</strong><span>to withdraw</span></div>
-      </div>
-      ${canBuy ? `
-      <button class="btn btn-gold" style="margin-top:12px;padding:12px;font-size:14px"
-        onclick="openUpgradeModal(${lvl.level})">
-        ⬆️ Upgrade to Level ${lvl.level} — ${lvl.price} TON
-      </button>` : ''}
-    </div>`;
-  }).join('');
-}
-
-
-function openUpgradeModal(targetLevel) {
-  const user = currentUser;
-  if (user.level >= 10) return showToast('You are already at the highest level!');
-
-  // If no target, pick next level
-  const lvl = targetLevel !== undefined ? LEVELS[targetLevel] : LEVELS[user.level + 1];
-  if (!lvl || lvl.price === 0) return showToast('This level is free — no upgrade needed!');
-  if (lvl.level === user.level) return showToast('You are already at this level!');
-
-  document.getElementById('upgrade-modal-content').innerHTML = `
-    <input type="hidden" id="upgrade-target-level" value="${lvl.level}">
-    <div class="info-row">
-      <span class="label">Upgrading to</span>
-      <span class="value">${getLevelIcon(lvl.level)} Level ${lvl.level} — ${lvl.name}</span>
-    </div>
-    <div class="info-row">
-      <span class="label">Amount Required</span>
-      <span class="value ton" style="font-size:18px">${lvl.price} TON</span>
-    </div>
-    <div class="info-row">
-      <span class="label">Mining Speed</span>
-      <span class="value" style="color:var(--green)">${lvl.speed} TON / 48h</span>
-    </div>
-    <div class="info-row">
-      <span class="label">Referrer Commission</span>
-      <span class="value" style="color:var(--gold)">${getCommission(lvl.level)}% → ${(lvl.price * getCommission(lvl.level) / 100).toFixed(2)} TON</span>
-    </div>
-    <div class="info-row"><span class="label">Project Wallet</span></div>
-    <div class="wallet-address" style="font-size:10px; cursor:pointer"
-         onclick="navigator.clipboard.writeText('${PROJECT_WALLET}').then(()=>showToast('✅ Copied!'))">
-      ${PROJECT_WALLET}
-    </div>
-    <div style="padding:12px; background:rgba(255,184,0,0.1); border-radius:10px; font-size:12px; color:var(--muted); margin:12px 0">
-      ⚠️ Send <strong style="color:var(--gold)">${lvl.price} TON</strong> to the wallet above, then press "I Confirm Sending".<br><br>
-      ✅ The transaction will be manually verified and the upgrade activated within 24 hours.
-    </div>
-  `;
-  document.getElementById('upgrade-modal').classList.add('open');
-}
-
-function confirmUpgrade() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  const targetLv = parseInt(document.getElementById('upgrade-target-level').value);
-  const lvl = LEVELS[targetLv];
-  if (!lvl) return showToast('Invalid level');
-
-  const commPct = getCommission(lvl.level);
-  const payout = {
-    id: Date.now(),
-    userId: user.id,
-    userName: user.name,
-    uplineId: user.uplineId,
-    upgradeLevel: lvl.level,
-    upgradePrice: lvl.price,
-    commissionPct: commPct,
-    uplineAmount: parseFloat((lvl.price * commPct / 100).toFixed(4)),
-    status: 'pending',
-    date: Date.now()
-  };
-
-  db.payouts.push(payout);
-  saveDb();
-  sendTelegram(`⬆️ <b>طلب ترقية!</b>
-👤 الاسم: ${user.name}
-🆔 ID: ${user.id}
-📊 المستوى: ${lvl.level} — ${lvl.name}
-💰 المبلغ: ${lvl.price} TON
-👛 المحفظة: ${user.wallet}`);
-  closeModal('upgrade-modal');
-  showToast('✅ Upgrade request sent! Will be activated within 24 hours');
-}
-
-
-function openWithdraw() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  if (user.balance < 0.1) {
-    showToast('❌ Minimum withdrawal is 0.1 TON');
-    return;
-  }
-  document.getElementById('withdraw-modal-content').innerHTML = `
-    <div class="info-row">
-      <span class="label">Available Balance</span>
-      <span class="value ton" style="font-size:16px">${user.balance.toFixed(4)} TON</span>
-    </div>
-    <div class="info-row">
-      <span class="label">Wallet</span>
-      <span class="value" style="font-size:11px; color:var(--muted); word-break:break-all">${user.wallet}</span>
-    </div>
-    <div style="margin:16px 0">
-      <label style="font-size:12px; color:var(--muted); display:block; margin-bottom:8px">💰 Withdrawal Amount (TON)</label>
-      <input type="number" id="withdraw-amount" min="0.1" max="${user.balance.toFixed(4)}" step="0.0001"
-        placeholder="Min: 0.1 TON"
-        style="width:100%; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:10px;
-               color:var(--ton-light); font-family:'Orbitron',monospace; font-size:18px; font-weight:700;
-               text-align:center; padding:14px; outline:none; box-sizing:border-box;">
-      <div style="display:flex; gap:8px; margin-top:8px">
-        <button onclick="setWithdrawPct(0.25)" style="flex:1; background:rgba(0,136,204,0.15); border:1px solid var(--border); color:var(--ton-light); border-radius:8px; padding:8px; font-size:12px; cursor:pointer">25%</button>
-        <button onclick="setWithdrawPct(0.5)"  style="flex:1; background:rgba(0,136,204,0.15); border:1px solid var(--border); color:var(--ton-light); border-radius:8px; padding:8px; font-size:12px; cursor:pointer">50%</button>
-        <button onclick="setWithdrawPct(0.75)" style="flex:1; background:rgba(0,136,204,0.15); border:1px solid var(--border); color:var(--ton-light); border-radius:8px; padding:8px; font-size:12px; cursor:pointer">75%</button>
-        <button onclick="setWithdrawPct(1)"    style="flex:1; background:rgba(0,136,204,0.15); border:1px solid var(--border); color:var(--ton-light); border-radius:8px; padding:8px; font-size:12px; cursor:pointer; font-weight:700">MAX</button>
-      </div>
-    </div>
-    <div style="padding:10px; background:rgba(255,184,0,0.08); border-radius:8px; font-size:12px; color:var(--muted)">
-      ⚠️ Minimum withdrawal: <strong style="color:var(--gold)">0.1 TON</strong>
-    </div>
-  `;
-  openModal('withdraw-modal');
-}
-
-function setWithdrawPct(pct) {
-  const user = db.users.find(u => u.id === currentUser.id);
-  const amount = parseFloat((user.balance * pct).toFixed(4));
-  document.getElementById('withdraw-amount').value = amount;
-}
-
-function confirmWithdraw() {
-  const user = db.users.find(u => u.id === currentUser.id);
-  const input = document.getElementById('withdraw-amount');
-  const amount = parseFloat(input ? input.value : user.balance);
-
-  if (!amount || isNaN(amount)) { showToast('❌ Please enter an amount'); return; }
-  if (amount < 0.1) { showToast('❌ Minimum withdrawal is 0.1 TON'); return; }
-  if (amount > user.balance) { showToast('❌ Insufficient balance'); return; }
-
-  // خصم الرصيد فوراً - سحب تلقائي
-  user.balance = parseFloat((user.balance - amount).toFixed(4));
-  user.totalWithdrawn = (user.totalWithdrawn || 0) + amount;
-  user.txHistory.unshift({ type: 'withdraw', amount: amount, date: Date.now(), desc: 'Withdrawal Successful ✅' });
-
-  const withdrawal = {
-    id: Date.now(),
-    userId: user.id,
-    userName: user.name,
-    wallet: user.wallet,
-    amount: amount,
-    status: 'done',
-    date: Date.now()
-  };
-
-  db.withdrawals.push(withdrawal);
-  saveDb();
-  sendTelegram(`💸 <b>طلب سحب!</b>
-👤 الاسم: ${user.name}
-🆔 ID: ${user.id}
-💰 المبلغ: ${amount.toFixed(4)} TON
-👛 المحفظة: ${user.wallet}
-📅 التاريخ: ${new Date().toLocaleString('ar')}`);
-  currentUser = user;
-
-  closeModal('withdraw-modal');
-  renderApp();
-  showToast('✅ ' + amount.toFixed(4) + ' TON Withdrawn Successfully!');
-}
-
-// ===== ADMIN =====
-function renderCommissionsSettings() {
-  const list = document.getElementById('commissions-settings-list');
-  if (!list) return;
-  list.innerHTML = LEVELS.slice(1).map(lvl => {
-    const pct = db.commissions[lvl.level] ?? 10;
-    return `<div style="display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid rgba(0,136,204,0.1);">
-      <div>
-        <span style="font-size:13px; font-weight:700">${getLevelIcon(lvl.level)} Level ${lvl.level}</span>
-        <span style="font-size:11px; color:var(--muted); margin-right:8px">${lvl.name} • ${lvl.price} TON</span>
-      </div>
-      <div style="display:flex; align-items:center; gap:6px;">
-        <input type="number" id="comm-lv${lvl.level}" value="${pct}" min="0" max="100"
-          style="width:60px; background:rgba(0,0,0,0.3); border:1px solid var(--border); border-radius:8px;
-                 color:var(--gold); font-family:Orbitron,monospace; font-size:14px; font-weight:700;
-                 text-align:center; padding:4px 6px; outline:none;">
-        <span style="color:var(--muted); font-size:13px;">%</span>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-function saveCommissions() {
-  LEVELS.slice(1).forEach(lvl => {
-    const inp = document.getElementById('comm-lv' + lvl.level);
-    if (inp) {
-      let val = parseInt(inp.value);
-      if (isNaN(val) || val < 0) val = 0;
-      if (val > 100) val = 100;
-      db.commissions[lvl.level] = val;
-      inp.value = val;
-    }
-  });
-  saveDb();
-  showToast('✅ Commission rates saved!');
-}
-
-function renderAdminPanel() {
-  firebaseDb.ref('tonneed').once('value').then(snapshot => {
-    const data = snapshot.val();
-    if (data) {
-      db = data;
-      if (Array.isArray(db.users)) {
-        db.users = db.users.filter(u => u !== null && u !== undefined);
-      } else if (db.users && typeof db.users === 'object') {
-        db.users = Object.values(db.users).filter(u => u !== null && u !== undefined);
-      }
-      if (!db.users) db.users = [];
-      if (!db.withdrawals) db.withdrawals = [];
-      if (!db.payouts) db.payouts = [];
-      if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
-    }
-    document.getElementById('admin-total-users').textContent = db.users.length;
-    document.getElementById('admin-pending-w').textContent = db.withdrawals ? (Array.isArray(db.withdrawals) ? db.withdrawals : Object.values(db.withdrawals)).filter(w => w && w.status === 'pending').length : 0;
-    renderCommissionsSettings();
-    renderAdminPayouts();
-    renderAdminUsers();
-    renderAdminWithdrawals();
-  }).catch(() => {
-    renderCommissionsSettings();
-    renderAdminPayouts();
-    renderAdminUsers();
-    renderAdminWithdrawals();
+    renderUsers(allUsers);
+    renderWithdrawals(allWithdrawals);
+  }).catch(err => {
+    document.getElementById('users-list').innerHTML = '<div class="loading">❌ خطأ في الاتصال: ' + err.message + '</div>';
   });
 }
 
-function renderAdminPayouts() {
-  const pending = db.payouts.filter(p => p.status === 'pending');
-  const list = document.getElementById('admin-payouts-list');
-  if (!pending.length) {
-    list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No pending payouts</div>';
+function filterUsers() {
+  const q = document.getElementById('search').value.trim().toLowerCase();
+  const filtered = q ? allUsers.filter(u =>
+    String(u.id).includes(q) ||
+    (u.name && u.name.toLowerCase().includes(q)) ||
+    (u.email && u.email.toLowerCase().includes(q))
+  ) : allUsers;
+  renderUsers(filtered);
+}
+
+function getRefs(u) {
+  if (!u.referrals) return 0;
+  if (Array.isArray(u.referrals)) return u.referrals.filter(r => r != null).length;
+  return Object.keys(u.referrals).length;
+}
+
+function renderUsers(users) {
+  const list = document.getElementById('users-list');
+  if (!users.length) {
+    list.innerHTML = '<div class="loading">❌ لا يوجد مستخدمين</div>';
     return;
   }
-  list.innerHTML = pending.map(p => {
-    const upline = db.users.find(u => u.id === p.uplineId);
-    const pct = p.commissionPct ?? getCommission(p.upgradeLevel);
-    const amt = p.uplineAmount ?? parseFloat((p.upgradePrice * pct / 100).toFixed(4));
-    const walletStr = upline ? upline.wallet : 'Not specified';
-    const walletEsc = upline ? upline.wallet.replace(/'/g, "\'") : '';
-    const uplineName = upline ? upline.name : '---';
-    return `<div class="ref-item" style="flex-direction:column; align-items:flex-start; gap:8px">
-      <div style="display:flex; justify-content:space-between; width:100%">
-        <div>
-          <div style="font-size:13px; font-weight:700">${p.userName}</div>
-          <div style="font-size:11px; color:var(--muted)">Upgrade to Lv${p.upgradeLevel} • ${p.upgradePrice} TON</div>
-        </div>
-        <span class="status-badge status-pending">Pending</span>
+  list.innerHTML = users.map((u, idx) => `
+    <div class="user-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <div class="user-id">ID: ${u.id}</div>
+        <span class="badge">Lv${u.level || 1}</span>
       </div>
-      <div style="background:rgba(255,184,0,0.08); border:1px solid rgba(255,184,0,0.25); border-radius:10px; padding:10px; width:100%">
-        <div style="color:var(--gold); font-weight:700; font-size:14px; margin-bottom:4px;">
-          💰 ${amt} TON <span style="font-size:11px; color:var(--muted); font-weight:400">(${pct}% of ${p.upgradePrice} TON)</span>
+      <div class="user-name">👤 ${u.name || '—'}</div>
+      <div class="user-info">📧 ${u.email || '—'}</div>
+      <div class="user-info">📱 Telegram: ${u.telegramId || '—'}</div>
+      <div class="user-info">📅 ${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar') : '—'}</div>
+      <div class="user-wallet">👛 ${u.wallet || '—'}</div>
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-box-label">💰 الرصيد</div>
+          <div class="stat-box-val" style="color:#00E676">${(u.balance || 0).toFixed(4)} TON</div>
         </div>
-        <div style="font-size:11px; color:var(--muted); margin-bottom:6px;">To Referrer: ${uplineName}</div>
-        <div style="display:flex; align-items:center; gap:6px;">
-          <span style="font-family:Orbitron,monospace; font-size:9px; color:var(--ton-light); word-break:break-all; flex:1">${walletStr}</span>
-          ${upline ? `<button class="copy-btn" style="padding:4px 10px; font-size:10px; flex-shrink:0" onclick="navigator.clipboard.writeText('${walletEsc}').then(()=>showToast('✅ Copied!'))">Copy</button>` : ''}
+        <div class="stat-box">
+          <div class="stat-box-label">🚀 المسحوب</div>
+          <div class="stat-box-val" style="color:#00AAFF">${(u.totalWithdrawn || 0).toFixed(4)} TON</div>
         </div>
-      </div>
-      <div style="display:flex; gap:8px; width:100%">
-        <button class="btn btn-primary btn-sm" onclick="markPayoutDone(${p.id})">✅ Sent</button>
-        <button class="btn btn-gold btn-sm" onclick="activateUpgrade(${p.id})">⬆️ Activate Upgrade</button>
-      </div>
-    </div>`;
-  }).join('');
-}
-
-
-function markPayoutDone(payoutId) {
-  const payout = db.payouts.find(p => p.id === payoutId);
-  if (!payout) return;
-  payout.status = 'done';
-
-  // Add commission to upline
-  const upline = db.users.find(u => u.id === payout.uplineId);
-  if (upline) {
-    upline.refCommission += payout.uplineAmount;
-    upline.txHistory.unshift({ type: 'commission', amount: payout.uplineAmount, date: Date.now(), desc: '10% Referral Commission' });
-  }
-
-  saveDb();
-  renderAdminPayouts();
-  showToast('✅ Payment confirmed');
-}
-
-function activateUpgrade(payoutId) {
-  const payout = db.payouts.find(p => p.id === payoutId);
-  if (!payout) return;
-
-  const user = db.users.find(u => u.id === payout.userId);
-  if (user) {
-    user.level = payout.upgradeLevel;
-    user.txHistory.unshift({ type: 'upgrade', amount: 0, date: Date.now(), desc: `Upgrade to Level ${payout.upgradeLevel}` });
-  }
-
-  payout.status = 'done';
-  saveDb();
-  renderAdminPayouts();
-  showToast(`✅ Upgrade activated for ${payout.userName}`);
-}
-
-function renderAdminUsers() {
-  const q = (document.getElementById('admin-search-id').value || '').trim();
-  const filtered = q
-    ? db.users.filter(u => String(u.id).includes(q))
-    : db.users;
-
-  const countEl = document.getElementById('admin-users-count');
-  if (countEl) countEl.textContent = '(' + filtered.length + ')';
-
-  const list = document.getElementById('admin-users-list');
-
-  if (!filtered.length) {
-    list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">❌ No user found with this ID</div>';
-    return;
-  }
-
-  list.innerHTML = filtered.map(u => `
-    <div style="background:rgba(0,136,204,0.06); border:1px solid var(--border); border-radius:12px; padding:14px; margin-bottom:10px">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px">
-        <div style="font-family:'Orbitron',monospace; font-size:16px; font-weight:900; color:var(--ton-light)">ID: ${u.id}</div>
-        <span class="ref-level-badge" style="font-size:12px; padding:4px 12px">${getLevelIcon(u.level)} Lv${u.level} — ${(LEVELS[u.level-1]||LEVELS[0]).name}</span>
-      </div>
-      <div style="font-size:14px; font-weight:700; margin-bottom:4px">👤 ${u.name}</div>
-      <div style="font-size:12px; color:var(--muted); margin-bottom:4px">📧 ${u.email || '—'}</div>
-      <div style="font-size:12px; color:var(--muted); margin-bottom:8px">📱 Telegram: ${u.telegramId || '—'}</div>
-      <div style="font-size:10px; font-family:'Orbitron',monospace; color:var(--ton-light); background:rgba(0,0,0,0.3); border-radius:8px; padding:8px; word-break:break-all; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center; gap:8px">
-        <span style="flex:1">👛 ${u.wallet}</span>
-        <button class="copy-btn" style="font-size:10px; padding:4px 8px; flex-shrink:0" onclick="navigator.clipboard.writeText('${u.wallet.replace(/'/g,"\'")}').then(()=>showToast('✅ Copied!'))">نسخ</button>
-      </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px">
-        <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">💰 الرصيد</div>
-          <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--green); font-weight:700">${u.balance.toFixed(4)} TON</div>
+        <div class="stat-box">
+          <div class="stat-box-label">👥 المحالون</div>
+          <div class="stat-box-val" style="color:#FFB800">${getRefs(u)}</div>
         </div>
-        <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">🚀 المسحوب</div>
-          <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--ton-light); font-weight:700">${(u.totalWithdrawn||0).toFixed(4)} TON</div>
-        </div>
-        <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">👥 المحالون</div>
-          <div style="font-family:'Orbitron',monospace; font-size:13px; color:var(--gold); font-weight:700">${u.referrals.length}</div>
-        </div>
-        <div style="text-align:center; background:rgba(0,0,0,0.2); border-radius:8px; padding:8px">
-          <div style="font-size:10px; color:var(--muted)">📅 الانضمام</div>
-          <div style="font-size:11px; color:var(--text); font-weight:600">${u.createdAt ? new Date(u.createdAt).toLocaleDateString('ar') : '—'}</div>
+        <div class="stat-box">
+          <div class="stat-box-label">🔗 المحيل</div>
+          <div class="stat-box-val" style="color:#00AAFF;font-size:12px">${u.referredBy || u.uplineId || '—'}</div>
         </div>
       </div>
-      <div style="font-size:12px; color:var(--muted); margin-bottom:10px">🔗 المحيل: ${u.referredBy ? '<span style="color:var(--ton-light)">' + u.referredBy + '</span>' : '—'}</div>
-      <div style="display:flex; gap:8px; margin-top:4px">
-        <button class="btn btn-sm btn-outline" onclick="showUserTree(${u.id})" style="flex:1; font-size:12px">🌳 View Tree</button>
-        <button onclick="resetUserBalance(${u.id})" style="flex:1; font-size:12px; background:rgba(255,68,68,0.15); border:1px solid rgba(255,68,68,0.4); color:#FF4444; border-radius:8px; cursor:pointer; padding:8px; font-weight:700">🔴 تصفير الرصيد</button>
-      </div>
+      <button class="btn-reset" onclick="resetBalance(${u.id}, '${(u.name||'').replace(/'/g,"\\'")}', ${u.balance||0})">
+        🔴 تصفير الرصيد (${(u.balance || 0).toFixed(4)} TON)
+      </button>
     </div>
   `).join('');
 }
 
-function resetUserBalance(userId) {
-  const user = db.users.find(u => u.id === userId);
-  if (!user) return;
-  if (!confirm('⚠️ هل أنت متأكد من تصفير رصيد ' + user.name + ' (ID: ' + userId + ')?\nالرصيد الحالي: ' + user.balance.toFixed(4) + ' TON')) return;
-  user.balance = 0;
-  saveDb();
-  renderAdminUsers();
-  showToast('✅ تم تصفير الرصيد بنجاح');
-}
-
-function showUserTree(userId) {
-  const user = db.users.find(u => u.id === userId);
-  if (!user) return;
-
-  document.getElementById('tree-modal-title').textContent = `🌳 Tree ${user.name}`;
-
-  function buildTree(uid, depth = 0) {
-    const u = db.users.find(x => x.id === uid);
-    if (!u) return '';
-    const indent = '&nbsp;'.repeat(depth * 4);
-    let html = `<div style="padding:6px 10px; margin:2px 0; background:rgba(0,136,204,0.05); border-radius:8px; font-size:12px">
-      ${indent}${depth > 0 ? '└ ' : ''}${getLevelIcon(u.level)} <strong>${u.name}</strong> 
-      <span style="color:var(--muted)">ID:${u.id}</span>
-      <span class="ref-level-badge" style="margin-right:4px">Lv${u.level}</span>
-      <br>${indent}&nbsp;&nbsp;&nbsp;
-      <span style="font-size:10px; color:var(--ton-light); font-family:Orbitron,monospace">${u.wallet.substring(0,20)}...</span>
-    </div>`;
-    if (u.referrals && depth < 3) {
-      u.referrals.forEach(refId => { html += buildTree(refId, depth + 1); });
-    }
-    return html;
-  }
-
-  document.getElementById('tree-modal-content').innerHTML = buildTree(userId);
-  document.getElementById('tree-modal').classList.add('open');
-}
-
-function renderAdminWithdrawals() {
-  const list = document.getElementById('admin-withdrawals-list');
-  const pending = db.withdrawals;
-  if (!pending.length) {
-    list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--muted); font-size:13px">No withdrawal requests</div>';
+function renderWithdrawals(withdrawals) {
+  const list = document.getElementById('withdrawals-list');
+  if (!withdrawals.length) {
+    list.innerHTML = '<div class="loading">✅ لا توجد سحوبات</div>';
     return;
   }
-
-  list.innerHTML = pending.reverse().map(w => `
-    <div class="ref-item" style="flex-direction:column; align-items:flex-start; gap:8px">
-      <div style="display:flex; justify-content:space-between; width:100%">
-        <div>
-          <div style="font-size:13px; font-weight:700">${w.userName}</div>
-          <div style="font-size:11px; color:var(--muted)">${new Date(w.date).toLocaleDateString('en')}</div>
-        </div>
-        <span class="status-badge ${w.status === 'pending' ? 'status-pending' : 'status-done'}">${w.status === 'pending' ? 'Pending' : 'Completed'}</span>
+  list.innerHTML = [...withdrawals].reverse().map(w => `
+    <div class="withdrawal-card">
+      <div style="display:flex;justify-content:space-between;margin-bottom:8px">
+        <div style="font-weight:bold">${w.userName || '—'}</div>
+        <span class="badge" style="${w.status==='pending'?'color:#FFB800':'color:#00E676'}">${w.status==='pending'?'⏳ معلق':'✅ تم'}</span>
       </div>
-      <div style="font-size:13px; color:var(--ton-light); font-family:Orbitron,monospace">${w.amount.toFixed(4)} TON</div>
-      <div style="font-size:10px; color:var(--muted)">${w.wallet}</div>
-      ${w.status === 'pending' ? `<div style="display:flex; gap:8px">
-        <button class="btn btn-primary btn-sm" onclick="approveWithdrawal(${w.id})">✅ Confirm</button>
-        <button class="btn btn-danger btn-sm" onclick="rejectWithdrawal(${w.id})">❌ Reject</button>
+      <div style="font-size:13px;color:#00AAFF;margin-bottom:4px">${(w.amount||0).toFixed(4)} TON</div>
+      <div style="font-size:11px;color:rgba(232,244,255,0.5);word-break:break-all;margin-bottom:8px">${w.wallet||'—'}</div>
+      ${w.status==='pending' ? `
+      <div style="display:flex;gap:8px">
+        <button class="btn-approve" onclick="approveWithdrawal(${w.id})">✅ تأكيد الدفع</button>
+        <button class="btn-reject" onclick="rejectWithdrawal(${w.id})">❌ رفض</button>
       </div>` : ''}
     </div>
   `).join('');
 }
 
-function approveWithdrawal(wId) {
-  const w = db.withdrawals.find(x => x.id === wId);
-  if (w) {
-    w.status = 'done';
-    const userBal = db.users.find(u => u.id === w.userId);
-    if (userBal) { userBal.balance = parseFloat((userBal.balance - w.amount).toFixed(4)); if (userBal.balance < 0) userBal.balance = 0; }
-    const user = db.users.find(u => u.id === w.userId);
-    if (user) {
-      user.totalWithdrawn += w.amount;
-      user.txHistory = user.txHistory.map(tx =>
-        tx.type === 'withdraw' && tx.desc.includes('Pending') ? { ...tx, desc: 'Withdrawal Successful' } : tx
-      );
+function findKey(ref, matchFn) {
+  return fdb.ref(ref).once('value').then(snap => {
+    const val = snap.val();
+    if (!val) return null;
+    if (Array.isArray(val)) {
+      const idx = val.findIndex(matchFn);
+      return idx !== -1 ? idx : null;
     }
-    saveDb();
-    renderAdminWithdrawals();
-    showToast('✅ Withdrawal confirmed');
-  }
+    for (const k of Object.keys(val)) {
+      if (matchFn(val[k])) return k;
+    }
+    return null;
+  });
+}
+
+function resetBalance(userId, userName, currentBalance) {
+  if (!confirm('⚠️ تصفير رصيد ' + userName + '?\nالرصيد الحالي: ' + currentBalance.toFixed(4) + ' TON')) return;
+  findKey('tonneed/users', u => u && u.id === userId).then(key => {
+    if (key === null) { showToast('❌ لم يتم العثور على المستخدم'); return; }
+    fdb.ref('tonneed/users/' + key + '/balance').set(0).then(() => {
+      showToast('✅ تم تصفير الرصيد بنجاح');
+      loadAll();
+    });
+  });
+}
+
+function approveWithdrawal(wId) {
+  findKey('tonneed/withdrawals', w => w && w.id === wId).then(wKey => {
+    if (wKey === null) return;
+    fdb.ref('tonneed/withdrawals/' + wKey).once('value').then(snap => {
+      const w = snap.val();
+      fdb.ref('tonneed/withdrawals/' + wKey + '/status').set('done');
+      findKey('tonneed/users', u => u && u.id === w.userId).then(uKey => {
+        if (uKey === null) return;
+        fdb.ref('tonneed/users/' + uKey).once('value').then(us => {
+          const user = us.val();
+          fdb.ref('tonneed/users/' + uKey + '/balance').set(Math.max(0, parseFloat(((user.balance||0) - (w.amount||0)).toFixed(4))));
+          fdb.ref('tonneed/users/' + uKey + '/totalWithdrawn').set(parseFloat(((user.totalWithdrawn||0) + (w.amount||0)).toFixed(4)));
+        });
+      });
+      showToast('✅ تم تأكيد الدفع');
+      setTimeout(loadAll, 1000);
+    });
+  });
 }
 
 function rejectWithdrawal(wId) {
-  const w = db.withdrawals.find(x => x.id === wId);
-  if (w) {
-    const user = db.users.find(u => u.id === w.userId);
-    if (user) { user.balance += w.amount; }
-    db.withdrawals = db.withdrawals.filter(x => x.id !== wId);
-    saveDb();
-    renderAdminWithdrawals();
-    showToast('❌ Done Withdrawal rejected and balance refunded');
-  }
-}
-
-function logoutAdmin() { showScreen('auth'); showLogin(); }
-
-// ===== UTILS =====
-function copyRef() {
-  const link = `${window.location.origin}${window.location.pathname}?ref=${currentUser.id}`;
-  navigator.clipboard.writeText(link).then(() => showToast('✅ Referral link copied!'));
-}
-
-function copyWallet() {
-  navigator.clipboard.writeText(currentUser.wallet).then(() => showToast('✅ Wallet address copied!'));
-}
-
-function openModal(id) { document.getElementById(id).classList.add('open'); }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-
-document.querySelectorAll('.modal-overlay').forEach(m => {
-  m.addEventListener('click', e => { if (e.target === m) m.classList.remove('open'); });
-});
-
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
-}
-
-// ===== EXIT & PAGE PROTECTION =====
-function confirmExit() {
-  const modal = document.getElementById('exit-modal');
-  modal.style.display = 'flex';
-}
-
-function closeExitModal() {
-  document.getElementById('exit-modal').style.display = 'none';
-}
-
-function doExit() {
-  // حفظ البيانات قبل الخروج
-  if (currentUser) saveDb();
-  // إغلاق تيليغرام WebApp أو إغلاق النافذة
-  if (tgWebApp) {
-    tgWebApp.close();
-  } else {
-    window.close();
-    // fallback لو window.close() لم يعمل
-    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;background:#040D1A;color:#E8F4FF;font-family:Orbitron,monospace;font-size:18px;text-align:center;flex-direction:column;gap:16px"><div style=\"font-size:48px\">✅</div><div>You can close this tab</div><div style=\"font-size:12px;color:rgba(232,244,255,0.5)\">⛏️ Mining continues in background</div></div>';
-  }
-}
-
-// منع الخروج العرضي بالضغط على Back أو إغلاق التبويب
-window.addEventListener('beforeunload', function(e) {
-  if (currentUser) {
-    saveDb();
-    e.preventDefault();
-    e.returnValue = '⛏️ Mining is running! Are you sure you want to leave?';
-    return e.returnValue;
-  }
-});
-
-// Telegram back button - منع الرجوع للخلف
-if (tgWebApp) {
-  tgWebApp.BackButton.onClick(function() {
-    confirmExit();
+  if (!confirm('رفض الطلب وإعادة الرصيد؟')) return;
+  findKey('tonneed/withdrawals', w => w && w.id === wId).then(wKey => {
+    if (wKey === null) return;
+    fdb.ref('tonneed/withdrawals/' + wKey).once('value').then(snap => {
+      const w = snap.val();
+      findKey('tonneed/users', u => u && u.id === w.userId).then(uKey => {
+        if (uKey !== null) {
+          fdb.ref('tonneed/users/' + uKey).once('value').then(us => {
+            fdb.ref('tonneed/users/' + uKey + '/balance').set(parseFloat(((us.val().balance||0) + (w.amount||0)).toFixed(4)));
+          });
+        }
+      });
+      fdb.ref('tonneed/withdrawals/' + wKey).remove();
+      showToast('❌ تم رفض الطلب وإعادة الرصيد');
+      setTimeout(loadAll, 1000);
+    });
   });
 }
 
-// ===== VISIBILITY CHANGE - حساب التعدين حتى لو الصفحة مخفية =====
-document.addEventListener('visibilitychange', function() {
-  if (document.visibilityState === 'visible' && currentUser) {
-    // عند العودة للصفحة، تحقق إذا انتهى التعدين وأعد تشغيله
-    const user = db.users.find(u => u.id === currentUser.id);
-    if (user && user.miningStart) {
-      const lvl = LEVELS[user.level - 1];
-      const total = lvl.interval * 3600 * 1000;
-      const elapsed = Date.now() - user.miningStart;
-      if (elapsed >= total) {
-        // انتهى التعدين أثناء الغياب - اجمع وأعد التشغيل
-        completeMining();
-      } else {
-        renderMiningTimer();
-      }
-    }
-  }
-});
-
-// Check ref in URL
-window.addEventListener('load', () => {
-  // ربط زر التعدين بـ addEventListener بدلاً من onclick
-  const orbEl = document.getElementById('miningOrb');
-  if (orbEl) {
-    orbEl.addEventListener('click', startMining);
-    orbEl.addEventListener('touchend', function(e) {
-      e.preventDefault();
-      startMining();
-    }, { passive: false });
-  }
-
-  loadDb(() => {
-    showScreen('admin');
-    renderAdminPanel();
-  });
-});
+loadAll();
 </script>
 </body>
 </html>
