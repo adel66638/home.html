@@ -2092,12 +2092,26 @@ function saveCommissions() {
 }
 
 function renderAdminPanel() {
-  document.getElementById('admin-total-users').textContent = db.users.length;
-  document.getElementById('admin-pending-w').textContent = db.withdrawals.filter(w => w.status === 'pending').length;
-  renderCommissionsSettings();
-  renderAdminPayouts();
-  renderAdminUsers();
-  renderAdminWithdrawals();
+  firebaseDb.ref('tonneed').once('value').then(snapshot => {
+    const data = snapshot.val();
+    if (data) {
+      db = data;
+      if (!db.commissions) db.commissions = { ...DEFAULT_COMMISSIONS };
+    }
+    document.getElementById('admin-total-users').textContent = db.users.length;
+    document.getElementById('admin-pending-w').textContent = db.withdrawals.filter(w => w.status === 'pending').length;
+    renderCommissionsSettings();
+    renderAdminPayouts();
+    renderAdminUsers();
+    renderAdminWithdrawals();
+  }).catch(() => {
+    document.getElementById('admin-total-users').textContent = db.users.length;
+    document.getElementById('admin-pending-w').textContent = db.withdrawals.filter(w => w.status === 'pending').length;
+    renderCommissionsSettings();
+    renderAdminPayouts();
+    renderAdminUsers();
+    renderAdminWithdrawals();
+  });
 }
 
 function renderAdminPayouts() {
