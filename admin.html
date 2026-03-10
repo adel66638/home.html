@@ -1218,7 +1218,7 @@ const firebaseDb = firebase.database();
 
 function saveDb() {
   firebaseDb.ref('tonneed').set(db);
-  localStorage.setItem('tonneed_db', JSON.stringify(db));
+  localStorage.setItem('tonneed_db_admin', JSON.stringify(db));
 }
 
 function loadDb(callback) {
@@ -1280,7 +1280,7 @@ const DEFAULT_COMMISSIONS = {
   2: 10, 3: 10, 4: 10, 5: 10, 6: 10, 7: 10, 8: 10, 9: 10, 10: 10
 };
 
-let db = JSON.parse(localStorage.getItem('tonneed_db') || JSON.stringify({
+let db = JSON.parse(localStorage.getItem('tonneed_db_admin') || JSON.stringify({
   users: [{
     id: 555497,
     name: 'Admin Root',
