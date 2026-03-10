@@ -2437,19 +2437,8 @@ window.addEventListener('load', () => {
   }
 
   loadDb(() => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const ref = urlParams.get('ref');
-    const admin = urlParams.get('admin');
-    if (admin === 'true') {
-      showScreen('admin');
-      renderAdminPanel();
-      return;
-    }
-    if (ref) {
-      showRegister();
-      document.getElementById('reg-ref').value = ref;
-      showToast('🔗 Redirected via referral link');
-    }
+    showScreen('admin');
+    renderAdminPanel();
   });
 });
 </script>
