@@ -252,16 +252,30 @@ function approveWithdrawal(wId) {
     if (wKey === null) return;
     fdb.ref('tonneed/withdrawals/' + wKey).once('value').then(snap => {
       const w = snap.val();
+      // تحديث حالة السحب
       fdb.ref('tonneed/withdrawals/' + wKey + '/status').set('done');
       findKey('tonneed/users', u => u && u.id === w.userId).then(uKey => {
         if (uKey === null) return;
         fdb.ref('tonneed/users/' + uKey).once('value').then(us => {
           const user = us.val();
-          fdb.ref('tonneed/users/' + uKey + '/balance').set(Math.max(0, parseFloat(((user.balance||0) - (w.amount||0)).toFixed(4))));
+          // تصفير الرصيد كاملاً
+          fdb.ref('tonneed/users/' + uKey + '/balance').set(0);
           fdb.ref('tonneed/users/' + uKey + '/totalWithdrawn').set(parseFloat(((user.totalWithdrawn||0) + (w.amount||0)).toFixed(4)));
+          // إضافة إشعار للمستخدم
+          const notif = {
+            id: Date.now(),
+            type: 'withdrawal_done',
+            title: '✅ تم إرسال الدفع!',
+            message: 'تم تحويل ' + (w.amount||0).toFixed(4) + ' TON إلى محفظتك بنجاح. رصيدك الآن: 0.0000 TON',
+            date: Date.now(),
+            read: false
+          };
+          const notifs = user.notifications ? (Array.isArray(user.notifications) ? user.notifications.filter(n=>n!=null) : Object.values(user.notifications).filter(n=>n!=null)) : [];
+          notifs.push(notif);
+          fdb.ref('tonneed/users/' + uKey + '/notifications').set(notifs);
         });
       });
-      showToast('✅ تم تأكيد الدفع');
+      showToast('✅ تم تأكيد الدفع وتصفير الرصيد');
       setTimeout(loadAll, 1000);
     });
   });
